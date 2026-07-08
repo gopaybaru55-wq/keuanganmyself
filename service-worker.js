@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dimerla-cache-v2';
+const CACHE_NAME = 'Markus Chan-cache-v2';
 const OFFLINE_URLS = [
   '/',
   './index.html',
