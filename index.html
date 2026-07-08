@@ -1395,9 +1395,9 @@
     <section class="page" id="page-panduan">
 
       <section class="panel" style="margin-bottom:16px;">
-        <div class="panel-title">Panduan Pengguna dimerla</div>
+        <div class="panel-title">Panduan Pengguna Markus Chan</div>
         <div class="panel-title-sub" style="margin-top:6px; max-width:640px;">
-          Ringkasan cara kerja fitur-fitur utama dimerla. Klik tiap topik untuk membuka penjelasan lengkapnya.
+          Ringkasan cara kerja fitur-fitur utama Keuangan My Self. Klik tiap topik untuk membuka penjelasan lengkapnya.
         </div>
       </section>
 
@@ -1415,7 +1415,7 @@
           </button>
           <div class="accordion-body" id="guide-body-dua-kantong">
             <div class="guide-content">
-              <p>dimerla memisahkan uangmu menjadi dua kantong yang benar-benar terpisah secara riil, bukan sekadar tampilan:</p>
+              <p>Markus Chan memisahkan uangmu menjadi dua kantong yang benar-benar terpisah secara riil, bukan sekadar tampilan:</p>
               <ul>
                 <li><strong>Kantong Indonesia (IDR)</strong> — mencakup BCA, BNI, BRI, Mandiri, Seabank, Bank Jago, Neo Bank, Permata Bank, DANA, OVO, GoPay, LinkAja, Sakuku, serta bank/e-wallet kustom yang kamu tambahkan sendiri.</li>
                 <li><strong>Kantong Sri Lanka (LKR)</strong> — khusus Sampath Bank dan Cash LKR (uang tunai fisik).</li>
@@ -1461,7 +1461,7 @@
                 <li>Pilih <strong>Akun Asal</strong> (tempat uang diambil) dan <strong>Akun Tujuan</strong> (tempat uang diterima).</li>
                 <li>Masukkan jumlah nominal yang dilepas dari akun asal.</li>
                 <li>Ketik <strong>nilai kurs hari itu</strong> secara manual (misal 52.5, 53, atau 55) — angka ini tidak terkunci di 54, jadi selalu presisi sesuai kurs agen yang sebenarnya.</li>
-                <li>dimerla otomatis menghitung jumlah yang diterima di akun tujuan, lalu memotong saldo akun asal dan menambah saldo akun tujuan secara sinkron begitu transaksi disimpan.</li>
+                <li>Keuangan My Self otomatis menghitung jumlah yang diterima di akun tujuan, lalu memotong saldo akun asal dan menambah saldo akun tujuan secara sinkron begitu transaksi disimpan.</li>
               </ol>
             </div>
           </div>
@@ -1498,7 +1498,7 @@
           <div class="accordion-body" id="guide-body-target-impian">
             <div class="guide-content">
               <p>Buat target bebas seperti "Biaya Nikah" atau "Modal Bisnis Kampung" dengan nominal target (IDR atau LKR, bebas pilih) dan bulan-tahun target menggunakan month picker.</p>
-              <p>Progres <strong>tidak diisi manual</strong> — dimerla membaca otomatis total gabungan saldo riil Kantong Indonesia + Kantong Sri Lanka (dikonversi ke kurs acuan) lalu membandingkannya dengan nominal targetmu.</p>
+              <p>Progres <strong>tidak diisi manual</strong> — Narkus Chan membaca otomatis total gabungan saldo riil Kantong Indonesia + Kantong Sri Lanka (dikonversi ke kurs acuan) lalu membandingkannya dengan nominal targetmu.</p>
               <p>Kalkulator simulasi di tiap kartu menghitung <strong>berapa yang wajib kamu sisihkan tiap bulan</strong> memakai rumus:</p>
               <p style="font-family:var(--font-mono); font-size:12.5px; background:var(--surface-sunken); padding:10px 14px; border-radius:var(--radius-sm);">Wajib Menabung/Bulan = (Nominal Target − Saldo Terkumpul) &divide; Sisa Bulan</p>
               <p>Kalau saldo gabunganmu sudah melebihi nominal target, kartu akan menampilkan status <strong>Target Tercapai</strong> beserta ucapan selamat.</p>
@@ -1781,13 +1781,13 @@
   /* ============================================================
      CONSTANTS & ICONS
   ============================================================ */
-  const STORAGE_KEY = 'dimerla_transactions';
-  const BUDGET_KEY = 'dimerla_budgets';
-  const PROFILE_KEY = 'dimerla_profile';
-  const SETTINGS_KEY = 'dimerla_settings';
-  const INVESTMENTS_KEY = 'dimerla_investments';
-  const CURRENCY_KEY = 'dimerla_currency';
-  const GOALS_KEY = 'dimerla_goals';
+  const STORAGE_KEY = 'Keuangan My Self_transactions';
+  const BUDGET_KEY = 'Keuangan My Self_budgets';
+  const PROFILE_KEY = 'Keuangan My Self_profile';
+  const SETTINGS_KEY = 'Keuangan My Self_settings';
+  const INVESTMENTS_KEY = 'Keuangan My Self_investments';
+  const CURRENCY_KEY = 'Keuangan My Self_currency';
+  const GOALS_KEY = 'Keuangan My Self_goals';
 
   const LKR_RATE = 54; // 1 LKR = 54 IDR (kurs acuan tetap, hanya untuk visualisasi/gabungan)
 
@@ -1856,7 +1856,7 @@
     investasi:  { title: 'Manajemen Investasi', subtitle: 'Catat dan pantau instrumen investasi kamu' },
     target:     { title: 'Target & Impian', subtitle: 'Wujudkan rencana keuanganmu dengan simulasi otomatis' },
     edukasi:    { title: 'Edukasi Finansial', subtitle: 'Wawasan singkat untuk keputusan finansial yang lebih baik' },
-    panduan:    { title: 'Panduan Pengguna', subtitle: 'Pelajari cara memaksimalkan fitur-fitur dimerla' },
+    panduan:    { title: 'Panduan Pengguna', subtitle: 'Pelajari cara memaksimalkan fitur-fitur Keuangan My Self' },
     profil:     { title: 'Profil & Pengaturan', subtitle: 'Kelola akun dan preferensi aplikasi' }
   };
 
