@@ -1,0 +1,3439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MY SELF — Personal Finance Tracker</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<style>
+  /* ============================================================
+     DESIGN TOKENS  (tidak diubah dari versi asli)
+  ============================================================ */
+  :root{
+    --bg:            #FBFBF9;
+    --surface:        #FFFFFF;
+    --surface-sunken: #F5F6F4;
+    --border:         #E7E9E5;
+    --border-strong:  #D8DBD5;
+
+    --text-primary:   #161A18;
+    --text-secondary: #6B726D;
+    --text-tertiary:  #A0A69F;
+
+    --emerald:        #0E8F6E;
+    --emerald-dark:   #0A6E55;
+    --emerald-light:  #E5F5EF;
+    --emerald-tint:   #DCF3EA;
+
+    --rose:           #C4463C;
+    --rose-light:     #FBEAE8;
+    --rose-tint:      #F7DEDB;
+
+    --shadow-sm: 0 1px 2px rgba(20, 24, 22, 0.04);
+    --shadow-md: 0 4px 16px rgba(20, 24, 22, 0.06), 0 1px 3px rgba(20,24,22,0.04);
+    --shadow-lg: 0 16px 48px rgba(20, 24, 22, 0.10), 0 4px 12px rgba(20,24,22,0.05);
+
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-full: 999px;
+
+    --font-ui:   'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    --sidebar-width: 264px;
+    --sidebar-width-collapsed: 84px;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ -webkit-font-smoothing: antialiased; }
+
+  body{
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  ::selection{ background: var(--emerald-tint); color: var(--emerald-dark); }
+  button{ font-family: inherit; cursor: pointer; }
+  input, select, textarea{ font-family: inherit; }
+  :focus-visible{ outline: 2px solid var(--emerald); outline-offset: 2px; border-radius: 4px; }
+
+  /* ============================================================
+     APP SHELL  (sidebar + main content)
+  ============================================================ */
+  .app-shell{
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 16px;
+    transition: width 0.25s var(--ease);
+    z-index: 60;
+  }
+
+  .sidebar-brand{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px 26px;
+  }
+  .brand-mark{
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(155deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(14, 143, 110, 0.28);
+    flex-shrink: 0;
+  }
+  .brand-mark svg{ width: 18px; height: 18px; color: #fff; }
+  .brand-text{ font-size: 16px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+  .brand-sub{ font-size: 11.5px; color: var(--text-tertiary); font-weight: 500; margin-top: -2px; white-space: nowrap; }
+
+  .sidebar-nav{
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .nav-item{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 11px 12px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-align: left;
+    transition: background 0.15s var(--ease), color 0.15s var(--ease);
+    white-space: nowrap;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .nav-item svg{ width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-item:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+  .nav-item.is-active{
+    background: var(--emerald-light);
+    color: var(--emerald-dark);
+  }
+  .nav-item .nav-label{ opacity: 1; transition: opacity 0.15s var(--ease); }
+
+  .sidebar-footer{
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 10px;
+  }
+  .collapse-btn{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-tertiary);
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: background 0.15s var(--ease), color 0.15s var(--ease);
+  }
+  .collapse-btn:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+  .collapse-btn svg{ width: 16px; height: 16px; flex-shrink: 0; transition: transform 0.25s var(--ease); }
+
+  /* Collapsed desktop state */
+  .app-shell.is-collapsed .sidebar{ width: var(--sidebar-width-collapsed); }
+  .app-shell.is-collapsed .brand-text,
+  .app-shell.is-collapsed .brand-sub,
+  .app-shell.is-collapsed .nav-label,
+  .app-shell.is-collapsed .collapse-label{ display: none; }
+  .app-shell.is-collapsed .sidebar-brand{ justify-content: center; }
+  .app-shell.is-collapsed .nav-item{ justify-content: center; }
+  .app-shell.is-collapsed .collapse-btn{ justify-content: center; }
+  .app-shell.is-collapsed .collapse-btn svg{ transform: rotate(180deg); }
+
+  /* ---------- MOBILE SIDEBAR OVERLAY ---------- */
+  .sidebar-overlay{
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 20, 18, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 55;
+    opacity: 0;
+    transition: opacity 0.25s var(--ease);
+  }
+  .sidebar-overlay.is-open{ display: block; opacity: 1; }
+
+  /* ---------- BOTTOM NAVIGATION (MOBILE ONLY) ---------- */
+  .bottom-nav{
+    display: none; /* disembunyikan total di Desktop/Laptop */
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 70;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(20, 24, 22, 0.10);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 2px;
+  }
+  .bottom-nav-item{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary);
+    padding: 7px 4px 6px;
+    border-radius: var(--radius-sm);
+    font-size: 10.5px;
+    font-weight: 600;
+    transition: color 0.15s var(--ease), background 0.15s var(--ease);
+  }
+  .bottom-nav-item svg{ width: 20px; height: 20px; }
+  .bottom-nav-item:active{ background: var(--surface-sunken); }
+  .bottom-nav-item.is-active{ color: var(--emerald-dark); }
+  .bottom-nav-item.is-active .bottom-nav-dot{ opacity: 1; }
+  .bottom-nav-dot{
+    width: 4px; height: 4px; border-radius: 50%; background: var(--emerald);
+    opacity: 0; margin-top: -1px;
+  }
+
+  /* ---------- MAIN CONTENT ---------- */
+  .main-content{
+    flex: 1;
+    min-width: 0;
+    padding: 28px 28px 96px;
+  }
+
+  .topbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .topbar-left{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .topbar-right{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hamburger-btn{
+    display: none;
+    width: 38px; height: 38px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .hamburger-btn svg{ width: 18px; height: 18px; color: var(--text-primary); }
+
+  .page-title{ font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+  .page-subtitle{ font-size: 12.5px; color: var(--text-tertiary); font-weight: 500; margin-top: 2px; }
+
+  .btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 11px 20px;
+    transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
+    white-space: nowrap;
+  }
+  .btn svg{ width: 16px; height: 16px; }
+  .btn:active{ transform: scale(0.97); }
+
+  .btn-primary{ background: var(--text-primary); color: #fff; box-shadow: var(--shadow-sm); }
+  .btn-primary:hover{ background: #000; box-shadow: var(--shadow-md); }
+
+  .btn-ghost{ background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-ghost:hover{ background: var(--surface-sunken); color: var(--text-primary); }
+
+  /* ---------- CURRENCY TOGGLE ---------- */
+  .currency-toggle{
+    display: flex;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 3px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .currency-toggle-btn{
+    border: none;
+    background: transparent;
+    padding: 7px 14px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    transition: all 0.2s var(--ease);
+    letter-spacing: 0.02em;
+  }
+  .currency-toggle-btn.is-active{
+    background: var(--text-primary);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .currency-toggle-btn:hover:not(.is-active){ color: var(--text-primary); }
+
+  /* ============================================================
+     PAGE / ROUTING SYSTEM
+  ============================================================ */
+  .page{ display: none; }
+  .page.is-active{
+    display: block;
+    animation: pageFadeIn 0.4s var(--ease);
+  }
+  @keyframes pageFadeIn{
+    from{ opacity: 0; transform: translateY(8px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================================================
+     STAT CARDS
+  ============================================================ */
+  .stats-grid{
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover{ box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+  .stat-card--balance{
+    background: linear-gradient(165deg, #14211D 0%, #0D1512 100%);
+    border-color: transparent;
+    color: #fff;
+  }
+
+  .stat-label{
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 600; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 14px;
+  }
+  .stat-card--balance .stat-label{ color: rgba(255,255,255,0.55); }
+
+  .stat-icon-badge{
+    width: 26px; height: 26px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .stat-icon-badge svg{ width: 14px; height: 14px; }
+  .stat-icon-badge--income{ background: var(--emerald-light); color: var(--emerald-dark); }
+  .stat-icon-badge--expense{ background: var(--rose-light); color: var(--rose); }
+  .stat-icon-badge--balance{ background: rgba(255,255,255,0.1); color: #fff; }
+
+  .stat-value{ font-family: var(--font-mono); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat-card--balance .stat-value{ font-size: 34px; }
+
+  .stat-currency{ font-size: 15px; font-weight: 500; color: var(--text-tertiary); margin-right: 4px; }
+  .stat-card--balance .stat-currency{ color: rgba(255,255,255,0.45); }
+
+  .ratio-bar{
+    margin-top: 20px; height: 6px; border-radius: var(--radius-full);
+    background: rgba(255,255,255,0.08); overflow: hidden; display: flex;
+  }
+  .ratio-bar__income{ background: var(--emerald); height: 100%; transition: width 0.6s var(--ease); border-radius: var(--radius-full) 0 0 var(--radius-full); }
+  .ratio-bar__expense{ background: #E0736A; height: 100%; transition: width 0.6s var(--ease); border-radius: 0 var(--radius-full) var(--radius-full) 0; }
+  .ratio-legend{ display: flex; gap: 16px; margin-top: 12px; font-size: 11.5px; color: rgba(255,255,255,0.5); font-weight: 500; }
+  .ratio-legend span{ display: inline-flex; align-items: center; gap: 6px; }
+  .ratio-dot{ width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ============================================================
+     PANELS (chart + category breakdown)
+  ============================================================ */
+  .panel-grid{ display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  .panel{
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .panel-header{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .panel-title{ font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .panel-title-sub{ font-size: 12px; color: var(--text-tertiary); margin-top: 2px; font-weight: 500; }
+
+  .chart-wrap{ display: flex; align-items: center; gap: 24px; }
+  .chart-canvas-box{ position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+  .chart-canvas-box.chart-canvas-box--lg{ width: 200px; height: 200px; }
+  .chart-legend{ flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .chart-legend-row{ display: flex; align-items: center; justify-content: space-between; }
+  .chart-legend-label{ display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .chart-legend-dot{ width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .chart-legend-value{ font-family: var(--font-mono); font-size: 13.5px; font-weight: 600; }
+
+  .category-list{ display: flex; flex-direction: column; gap: 16px; }
+  .category-row{ display: flex; flex-direction: column; gap: 7px; }
+  .category-row-top{ display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+  .category-row-name{ display: flex; align-items: center; gap: 9px; font-weight: 600; color: var(--text-primary); }
+  .category-row-icon{ width: 22px; height: 22px; border-radius: 7px; background: var(--surface-sunken); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); flex-shrink: 0; }
+  .category-row-icon svg{ width: 12px; height: 12px; }
+  .category-row-amount{ font-family: var(--font-mono); font-weight: 600; color: var(--text-secondary); font-size: 12.5px; }
+  .category-bar-track{ height: 5px; border-radius: var(--radius-full); background: var(--surface-sunken); overflow: hidden; }
+  .category-bar-fill{ height: 100%; background: var(--emerald); border-radius: var(--radius-full); transition: width 0.5s var(--ease); }
+  .category-bar-fill.is-over{ background: var(--rose); }
+
+  .empty-mini{ font-size: 13px; color: var(--text-tertiary); text-align: center; padding: 30px 0; }
+
+  /* ============================================================
+     ACCOUNTS WIDGET (Saldo per Akun)
+  ============================================================ */
+  .accounts-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 12px;
+  }
+  .account-chip{
+    background: var(--surface-sunken);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    transition: transform 0.15s var(--ease);
+  }
+  .account-chip:hover{ transform: translateY(-2px); }
+  .account-chip-name{
+    font-size: 12px; font-weight: 700; color: var(--text-secondary);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .account-chip-icon{
+    width: 22px; height: 22px; border-radius: 7px;
+    background: var(--surface); display: flex; align-items: center; justify-content: center;
+    color: var(--text-tertiary); flex-shrink: 0;
+  }
+  .account-chip-icon svg{ width: 12px; height: 12px; }
+  .account-chip-balance{ font-family: var(--font-mono); font-weight: 700; font-size: 14.5px; }
+  .account-chip-balance.is-negative{ color: var(--rose); }
+  .account-chip-balance.is-positive{ color: var(--emerald-dark); }
+  .account-chip-tag{
+    display: inline-block; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-tertiary); margin-top: 6px;
+  }
+
+  /* ============================================================
+     REKENING & E-WALLET PAGE
+  ============================================================ */
+  .subsection-title{
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px; font-weight: 700; color: var(--text-primary);
+    margin: 4px 0 14px;
+  }
+  .subsection-tag{
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 3px 9px; border-radius: var(--radius-full);
+  }
+  .subsection-tag.tag-idr{ background: var(--emerald-light); color: var(--emerald-dark); }
+  .subsection-tag.tag-lkr{ background: var(--rose-light); color: var(--rose); }
+
+  /* ============================================================
+     TRANSACTION HISTORY PANEL
+  ============================================================ */
+  .history-panel{ background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+
+  .history-header{
+    padding: 22px 24px 18px; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border);
+  }
+
+  .filters{ display: flex; gap: 8px; }
+
+  .filter-select{
+    appearance: none;
+    background: var(--surface-sunken) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="%236B726D" stroke-width="2"><path d="M5 8l5 5 5-5"/></svg>') no-repeat right 10px center;
+    background-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 9px 32px 9px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: border-color 0.15s var(--ease);
+  }
+  .filter-select:hover{ border-color: var(--border-strong); }
+
+  .transaction-list{ display: flex; flex-direction: column; }
+
+  .transaction-row{
+    display: flex; align-items: center; gap: 14px; padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s var(--ease);
+    animation: rowIn 0.3s var(--ease);
+  }
+  .transaction-row:last-child{ border-bottom: none; }
+  .transaction-row:hover{ background: var(--surface-sunken); }
+
+  @keyframes rowIn{ from{ opacity: 0; transform: translateY(-4px); } to{ opacity: 1; transform: translateY(0); } }
+
+  .tx-icon{ width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .tx-icon svg{ width: 18px; height: 18px; }
+  .tx-icon--income{ background: var(--emerald-light); color: var(--emerald-dark); }
+  .tx-icon--expense{ background: var(--rose-light); color: var(--rose); }
+  .tx-icon--exchange{ background: var(--surface-sunken); color: var(--text-secondary); }
+
+  .tx-info{ flex: 1; min-width: 0; }
+  .tx-name{ font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-meta{ font-size: 12px; color: var(--text-tertiary); margin-top: 2px; font-weight: 500; }
+
+  .tx-amount{ font-family: var(--font-mono); font-weight: 600; font-size: 14px; white-space: nowrap; }
+  .tx-amount--income{ color: var(--emerald-dark); }
+  .tx-amount--expense{ color: var(--rose); }
+  .tx-amount--exchange{ color: var(--text-secondary); font-size: 12.5px; text-align: right; }
+
+  .tx-actions{ display: flex; gap: 6px; flex-shrink: 0; }
+
+  .icon-btn{
+    width: 32px; height: 32px; border-radius: 9px; border: 1px solid transparent;
+    background: transparent; color: var(--text-tertiary);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s var(--ease);
+  }
+  .icon-btn svg{ width: 15px; height: 15px; }
+  .icon-btn:hover{ background: var(--surface-sunken); color: var(--text-primary); border-color: var(--border); }
+  .icon-btn--danger:hover{ background: var(--rose-light); color: var(--rose); }
+
+  .confirm-inline{ display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; }
+  .confirm-inline button{ border: none; border-radius: var(--radius-full); padding: 6px 12px; font-size: 11.5px; font-weight: 700; }
+  .confirm-yes{ background: var(--rose); color: #fff; }
+  .confirm-no{ background: var(--surface-sunken); color: var(--text-secondary); }
+
+  .empty-state{ padding: 64px 24px; text-align: center; }
+  .empty-state-icon{ width: 56px; height: 56px; border-radius: 16px; background: var(--surface-sunken); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; color: var(--text-tertiary); }
+  .empty-state-icon svg{ width: 26px; height: 26px; }
+  .empty-state-title{ font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .empty-state-sub{ font-size: 13px; color: var(--text-tertiary); max-width: 280px; margin: 0 auto; }
+
+  /* ============================================================
+     BUDGET PAGE
+  ============================================================ */
+  .budget-grid{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+  .budget-card{
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px; box-shadow: var(--shadow-sm);
+  }
+  .budget-card-top{ display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .budget-cat-name{ display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; }
+  .budget-cat-icon{ width: 30px; height: 30px; border-radius: 9px; background: var(--surface-sunken); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); flex-shrink: 0; }
+  .budget-cat-icon svg{ width: 15px; height: 15px; }
+
+  .budget-input-row{ display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .budget-input-row .field-prefix{ font-size: 13px; font-weight: 600; color: var(--text-tertiary); }
+  .budget-input{
+    flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 9px 12px; font-size: 13.5px; font-family: var(--font-mono);
+    transition: border-color 0.15s var(--ease);
+  }
+  .budget-input:focus{ outline: none; border-color: var(--emerald); box-shadow: 0 0 0 3px var(--emerald-tint); }
+
+  .budget-progress-track{ height: 8px; border-radius: var(--radius-full); background: var(--surface-sunken); overflow: hidden; margin-bottom: 8px; }
+  .budget-progress-fill{ height: 100%; background: var(--emerald); border-radius: var(--radius-full); transition: width 0.5s var(--ease); }
+  .budget-progress-fill.is-over{ background: var(--rose); }
+
+  .budget-meta-row{ display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-tertiary); font-weight: 600; }
+  .budget-meta-row .is-over-text{ color: var(--rose); }
+
+  /* ============================================================
+     EDUKASI FINANSIAL
+  ============================================================ */
+  .edu-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .edu-card{
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 24px; box-shadow: var(--shadow-sm);
+    transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+  .edu-card:hover{ transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+  .edu-card-icon{
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .edu-card-icon svg{ width: 20px; height: 20px; }
+  .edu-card-icon.tone-emerald{ background: var(--emerald-light); color: var(--emerald-dark); }
+  .edu-card-icon.tone-rose{ background: var(--rose-light); color: var(--rose); }
+  .edu-card-icon.tone-neutral{ background: var(--surface-sunken); color: var(--text-secondary); }
+
+  .edu-card-title{ font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .edu-card-body{ font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+
+  .edu-card-tag{
+    display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; padding: 4px 10px; border-radius: var(--radius-full);
+    margin-bottom: 12px;
+  }
+  .edu-card-tag.tone-emerald{ background: var(--emerald-light); color: var(--emerald-dark); }
+  .edu-card-tag.tone-rose{ background: var(--rose-light); color: var(--rose); }
+
+  /* ============================================================
+     MANAJEMEN INVESTASI
+  ============================================================ */
+  .invest-layout{ display: grid; grid-template-columns: 360px 1fr; gap: 16px; align-items: start; }
+
+  .accordion{
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm); margin-bottom: 14px; overflow: hidden;
+  }
+  .accordion:last-child{ margin-bottom: 0; }
+  .accordion-header{
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 18px 20px; border: none; background: transparent; text-align: left;
+  }
+  .accordion-header:hover{ background: var(--surface-sunken); }
+  .accordion-header-left{ display: flex; align-items: center; gap: 12px; }
+  .accordion-title{ font-size: 14px; font-weight: 700; }
+  .accordion-count{
+    font-size: 11px; font-weight: 700; background: var(--surface-sunken); color: var(--text-secondary);
+    padding: 3px 9px; border-radius: var(--radius-full);
+  }
+  .accordion-chevron{ width: 18px; height: 18px; color: var(--text-tertiary); transition: transform 0.25s var(--ease); flex-shrink: 0; }
+  .accordion.is-open .accordion-chevron{ transform: rotate(180deg); }
+  .accordion-body{ max-height: 0; overflow: hidden; transition: max-height 0.3s var(--ease); }
+  .accordion.is-open .accordion-body{ border-top: 1px solid var(--border); }
+
+  .invest-row{
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+  }
+  .invest-row:last-child{ border-bottom: none; }
+  .invest-row-name{ font-size: 13.5px; font-weight: 600; }
+  .invest-row-date{ font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px; }
+  .invest-row-mid{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+  .invest-row-qty{ font-family: var(--font-mono); font-weight: 600; font-size: 12px; color: var(--text-secondary); }
+  .invest-row-price{ font-family: var(--font-mono); font-weight: 700; font-size: 13.5px; flex-shrink: 0; white-space: nowrap; }
+  .invest-row-right{ display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  /* ============================================================
+     TARGET & IMPIAN (GOALS)
+  ============================================================ */
+  .goals-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .goal-card{
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 22px; box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: 16px;
+    transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+  }
+  .goal-card:hover{ box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .goal-card.is-achieved{ border-color: var(--emerald); }
+
+  .goal-card-top{ display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .goal-card-name{ font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+  .goal-card-due{ font-size: 12px; color: var(--text-tertiary); font-weight: 600; margin-top: 3px; }
+  .goal-card-actions{ display: flex; gap: 6px; flex-shrink: 0; }
+
+  .goal-progress-wrap{ display: flex; flex-direction: column; gap: 8px; }
+  .goal-progress-toprow{ display: flex; align-items: baseline; justify-content: space-between; }
+  .goal-progress-pct{ font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--emerald-dark); }
+  .goal-progress-pct.is-achieved{ color: var(--emerald); }
+  .goal-progress-amounts{ font-size: 11.5px; color: var(--text-tertiary); font-weight: 600; text-align: right; }
+  .goal-progress-track{ height: 10px; border-radius: var(--radius-full); background: var(--surface-sunken); overflow: hidden; }
+  .goal-progress-fill{ height: 100%; background: linear-gradient(90deg, var(--emerald) 0%, var(--emerald-dark) 100%); border-radius: var(--radius-full); transition: width 0.6s var(--ease); }
+  .goal-progress-fill.is-achieved{ background: linear-gradient(90deg, var(--emerald-dark) 0%, #063D2F 100%); }
+
+  .goal-stats-row{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .goal-stat-box{ background: var(--surface-sunken); border-radius: var(--radius-md); padding: 12px 14px; }
+  .goal-stat-label{ font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-tertiary); margin-bottom: 5px; }
+  .goal-stat-value{ font-family: var(--font-mono); font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+  .goal-stat-value.is-rose{ color: var(--rose); }
+  .goal-stat-note{ font-size: 10.5px; color: var(--rose); font-weight: 600; margin-top: 3px; }
+
+  .goal-motivation{
+    background: var(--emerald-light); color: var(--emerald-dark); border-radius: var(--radius-md);
+    padding: 12px 14px; font-size: 12.5px; font-weight: 600; line-height: 1.5;
+  }
+  .goal-motivation.is-achieved{ background: var(--text-primary); color: #fff; }
+
+  /* ============================================================
+     PANDUAN PENGGUNA (USER GUIDE)
+  ============================================================ */
+  .guide-icon{
+    width: 32px; height: 32px; border-radius: 9px; background: var(--emerald-light); color: var(--emerald-dark);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .guide-icon svg{ width: 16px; height: 16px; }
+  .guide-content{ padding: 4px 20px 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .guide-content p{ margin-bottom: 10px; }
+  .guide-content p:last-child{ margin-bottom: 0; }
+  .guide-content ul, .guide-content ol{ margin: 0 0 10px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .guide-content strong{ color: var(--text-primary); font-weight: 700; }
+
+  /* ============================================================
+     PROFIL & PENGATURAN
+  ============================================================ */
+  .profile-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+  .profile-avatar{
+    width: 64px; height: 64px; border-radius: 18px;
+    background: linear-gradient(155deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 22px; font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .settings-row{
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; border-bottom: 1px solid var(--border);
+  }
+  .settings-row:last-child{ border-bottom: none; }
+  .settings-row-label{ font-size: 13.5px; font-weight: 600; }
+  .settings-row-sub{ font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+
+  .switch{ position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+  .switch input{ opacity: 0; width: 0; height: 0; }
+  .switch-track{
+    position: absolute; inset: 0; background: var(--border-strong); border-radius: var(--radius-full);
+    transition: background 0.2s var(--ease); cursor: pointer;
+  }
+  .switch-track::before{
+    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: transform 0.2s var(--ease);
+    box-shadow: var(--shadow-sm);
+  }
+  .switch input:checked + .switch-track{ background: var(--emerald); }
+  .switch input:checked + .switch-track::before{ transform: translateX(18px); }
+
+  .danger-zone{
+    border: 1px dashed var(--rose-tint); background: var(--rose-light);
+    border-radius: var(--radius-md); padding: 16px 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px;
+  }
+  .danger-zone-text{ font-size: 12.5px; color: var(--rose); font-weight: 600; max-width: 260px; }
+  .btn-danger{ background: var(--rose); color: #fff; flex-shrink: 0; }
+  .btn-danger:hover{ background: #A83A31; }
+
+  /* ============================================================
+     MODAL
+  ============================================================ */
+  .modal-overlay{
+    position: fixed; inset: 0; background: rgba(15, 20, 18, 0.45); backdrop-filter: blur(4px);
+    display: none; align-items: flex-start; justify-content: center; padding: 8vh 16px; z-index: 100; overflow-y: auto;
+  }
+  .modal-overlay.is-open{ display: flex; animation: overlayIn 0.2s var(--ease); }
+  @keyframes overlayIn{ from{ opacity: 0; } to{ opacity: 1; } }
+
+  .modal{ background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 440px; box-shadow: var(--shadow-lg); animation: modalIn 0.25s var(--ease); }
+  @keyframes modalIn{ from{ opacity: 0; transform: translateY(10px) scale(0.98); } to{ opacity: 1; transform: translateY(0) scale(1); } }
+
+  .modal-header{ display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; border-bottom: 1px solid var(--border); }
+  .modal-title{ font-size: 16px; font-weight: 700; }
+  .modal-close{ width: 30px; height: 30px; border-radius: 9px; border: none; background: var(--surface-sunken); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; transition: all 0.15s var(--ease); }
+  .modal-close:hover{ background: var(--border); color: var(--text-primary); }
+  .modal-close svg{ width: 15px; height: 15px; }
+
+  .modal-body{ padding: 22px 24px; }
+
+  .type-toggle{ display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface-sunken); border-radius: var(--radius-full); padding: 4px; margin-bottom: 20px; gap: 2px; }
+  .type-toggle button{ border: none; background: transparent; padding: 10px 4px; border-radius: var(--radius-full); font-size: 12px; font-weight: 700; color: var(--text-tertiary); transition: all 0.2s var(--ease); white-space: nowrap; }
+  .type-toggle button.is-active-income{ background: var(--emerald); color: #fff; box-shadow: var(--shadow-sm); }
+  .type-toggle button.is-active-expense{ background: var(--rose); color: #fff; box-shadow: var(--shadow-sm); }
+  .type-toggle button.is-active-exchange{ background: var(--text-primary); color: #fff; box-shadow: var(--shadow-sm); }
+
+  .field{ margin-bottom: 16px; }
+  .field-label{ display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 7px; }
+  .field-input, .field-select{
+    width: 100%; border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius-sm);
+    padding: 12px 14px; font-size: 14px; color: var(--text-primary);
+    transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  }
+  .field-input:focus, .field-select:focus{ outline: none; border-color: var(--emerald); box-shadow: 0 0 0 3px var(--emerald-tint); }
+  .field-input.has-error, .field-select.has-error{ border-color: var(--rose); }
+  .field-input.has-error:focus{ box-shadow: 0 0 0 3px var(--rose-tint); }
+  .field-error{ font-size: 11.5px; color: var(--rose); font-weight: 600; margin-top: 6px; display: none; }
+  .field-error.is-visible{ display: block; }
+  .field-hint{ font-size: 11.5px; color: var(--text-tertiary); font-weight: 500; margin-top: 6px; }
+
+  .amount-input-wrap{ position: relative; }
+  .amount-input-wrap .field-prefix{ position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-tertiary); font-weight: 600; pointer-events: none; }
+  .amount-input-wrap .field-input{ padding-left: 34px; }
+
+  .field-select{ appearance: none; background: var(--surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="%236B726D" stroke-width="2"><path d="M5 8l5 5 5-5"/></svg>') no-repeat right 14px center; background-size: 14px; }
+
+  .mini-toggle{ display: flex; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; gap: 2px; margin-bottom: 16px; }
+  .mini-toggle button{ flex: 1; border: none; background: transparent; padding: 8px; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: var(--text-tertiary); transition: all 0.2s var(--ease); }
+  .mini-toggle button.is-active{ background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+
+  .exchange-preview{
+    background: var(--surface-sunken); border-radius: var(--radius-md); padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+    font-size: 13px; font-weight: 700; font-family: var(--font-mono);
+  }
+  .exchange-preview .arrow{ color: var(--text-tertiary); font-family: var(--font-ui); }
+
+  .modal-footer{ padding: 18px 24px 24px; display: flex; gap: 10px; }
+  .modal-footer .btn{ flex: 1; justify-content: center; }
+
+  .shake{ animation: shake 0.35s var(--ease); }
+  @keyframes shake{ 0%, 100%{ transform: translateX(0); } 25%{ transform: translateX(-4px); } 75%{ transform: translateX(4px); } }
+
+  /* ============================================================
+     TOAST
+  ============================================================ */
+  .toast-stack{ position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 200; }
+  .toast{
+    display: flex; align-items: center; gap: 10px; background: var(--text-primary); color: #fff;
+    padding: 14px 18px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+    font-size: 13px; font-weight: 600; animation: toastIn 0.3s var(--ease); max-width: 320px;
+  }
+  .toast svg{ width: 16px; height: 16px; color: var(--emerald); flex-shrink: 0; }
+  .toast.is-leaving{ animation: toastOut 0.25s var(--ease) forwards; }
+  @keyframes toastIn{ from{ opacity: 0; transform: translateY(8px) scale(0.96); } to{ opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes toastOut{ to{ opacity: 0; transform: translateY(8px) scale(0.96); } }
+
+  /* ============================================================
+     RESPONSIVE
+  ============================================================ */
+  @media (max-width: 1080px){
+    .edu-grid{ grid-template-columns: repeat(2, 1fr); }
+    .invest-layout{ grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 860px){
+    .stats-grid{ grid-template-columns: 1fr; }
+    .panel-grid{ grid-template-columns: 1fr; }
+    .budget-grid{ grid-template-columns: 1fr; }
+    .profile-grid{ grid-template-columns: 1fr; }
+
+    /* Sidebar becomes an off-canvas drawer */
+    .sidebar{
+      position: fixed;
+      top: 0; left: 0;
+      transform: translateX(-100%);
+      box-shadow: none;
+      width: 260px;
+    }
+    .sidebar.is-open{ transform: translateX(0); box-shadow: var(--shadow-lg); }
+    .app-shell.is-collapsed .sidebar{ width: 260px; }
+    .app-shell.is-collapsed .brand-text,
+    .app-shell.is-collapsed .brand-sub,
+    .app-shell.is-collapsed .nav-label,
+    .app-shell.is-collapsed .collapse-label{ display: block; }
+    .app-shell.is-collapsed .sidebar-brand{ justify-content: flex-start; }
+    .app-shell.is-collapsed .nav-item{ justify-content: flex-start; }
+    .app-shell.is-collapsed .collapse-btn{ justify-content: flex-start; }
+    .collapse-btn{ display: none; }
+
+    .main-content{ margin-left: 0; padding: 20px 16px 96px; }
+    .hamburger-btn{ display: flex; }
+    .edu-grid{ grid-template-columns: 1fr; }
+  }
+
+  /* ---------- BOTTOM NAV: aktif khusus HP (<=768px) ---------- */
+  @media (max-width: 768px){
+    .hamburger-btn{ display: none; } /* fungsi dipindah ke tombol "Lainnya" di Bottom Nav */
+    .bottom-nav{ display: flex; }
+    .main-content{ padding-bottom: 92px; } /* beri ruang agar konten tidak tertutup Bottom Nav */
+  }
+
+  @media (max-width: 560px){
+    .topbar{ margin-bottom: 24px; }
+    .btn-primary span{ display: none; }
+    .btn-primary{ padding: 12px; }
+    .history-header{ flex-direction: column; align-items: stretch; }
+    .filters{ width: 100%; }
+    .filter-select{ flex: 1; }
+    .tx-meta{ display: none; }
+    .modal-overlay{ padding: 0; align-items: flex-end; }
+    .modal{ max-width: 100%; border-radius: 20px 20px 0 0; }
+    .currency-toggle-btn{ padding: 7px 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-text">KEUANGAN MY SELF</div>
+        <div class="brand-sub">Finance tracker</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item is-active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-page="rekening">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2"/><path d="M3 10h18"/></svg>
+        <span class="nav-label">Rekening &amp; E-Wallet</span>
+      </button>
+      <button class="nav-item" data-page="laporan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9"/><path d="M12 19V5"/><path d="M20 19v-7"/></svg>
+        <span class="nav-label">Laporan &amp; Analitik</span>
+      </button>
+      <button class="nav-item" data-page="anggaran">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M2 10h20"/><circle cx="17" cy="14.5" r="1.4" fill="currentColor" stroke="none"/></svg>
+        <span class="nav-label">Manajemen Anggaran</span>
+      </button>
+      <button class="nav-item" data-page="investasi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 6-8"/><path d="M14 7h5v5"/></svg>
+        <span class="nav-label">Manajemen Investasi</span>
+      </button>
+      <button class="nav-item" data-page="target">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+        <span class="nav-label">Target &amp; Impian</span>
+      </button>
+      <button class="nav-item" data-page="edukasi">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+        <span class="nav-label">Edukasi Finansial</span>
+      </button>
+      <button class="nav-item" data-page="panduan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.2 2-2 2.6-.6.4-1 .9-1 1.9"/><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"/></svg>
+        <span class="nav-label">Panduan Pengguna</span>
+      </button>
+      <button class="nav-item" data-page="profil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span class="nav-label">Profil &amp; Pengaturan</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="collapse-btn" id="btnCollapse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5"/><path d="M18 17l-5-5 5-5"/></svg>
+        <span class="collapse-label">Ciutkan menu</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <div class="main-content">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger-btn" id="btnHamburger" aria-label="Buka menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-subtitle" id="pageSubtitle">Ringkasan keuangan kamu hari ini</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="currency-toggle" id="currencyToggle">
+          <button type="button" class="currency-toggle-btn" data-currency="IDR">IDR</button>
+          <button type="button" class="currency-toggle-btn" data-currency="LKR">LKR</button>
+        </div>
+        <button class="btn btn-primary" id="btnOpenAdd">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Tambah Transaksi</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ================================================================
+         PAGE 1 — DASHBOARD
+    ================================================================= -->
+    <section class="page is-active" id="page-dashboard">
+
+      <section class="stats-grid">
+        <div class="stat-card stat-card--balance">
+          <div class="stat-label">
+            <div class="stat-icon-badge stat-icon-badge--balance">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+            </div>
+            Total Saldo (Net Worth)
+          </div>
+          <div class="stat-value"><span class="stat-currency">Rp</span><span id="statBalance">0</span></div>
+          <div class="ratio-bar">
+            <div class="ratio-bar__income" id="ratioIncome" style="width:50%"></div>
+            <div class="ratio-bar__expense" id="ratioExpense" style="width:50%"></div>
+          </div>
+          <div class="ratio-legend">
+            <span><i class="ratio-dot" style="background:var(--emerald)"></i>Pemasukan</span>
+            <span><i class="ratio-dot" style="background:#E0736A"></i>Pengeluaran</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">
+            <div class="stat-icon-badge stat-icon-badge--income">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            </div>
+            Pemasukan
+          </div>
+          <div class="stat-value"><span class="stat-currency">Rp</span><span id="statIncome">0</span></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">
+            <div class="stat-icon-badge stat-icon-badge--expense">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </div>
+            Pengeluaran
+          </div>
+          <div class="stat-value"><span class="stat-currency">Rp</span><span id="statExpense">0</span></div>
+        </div>
+      </section>
+
+      <section class="panel-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Pemasukan vs Pengeluaran</div>
+              <div class="panel-title-sub">Perbandingan total keseluruhan</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-canvas-box"><canvas id="mainChart"></canvas></div>
+            <div class="chart-legend">
+              <div class="chart-legend-row">
+                <span class="chart-legend-label"><i class="chart-legend-dot" style="background:var(--emerald)"></i>Pemasukan</span>
+                <span class="chart-legend-value" id="legendIncome">Rp 0</span>
+              </div>
+              <div class="chart-legend-row">
+                <span class="chart-legend-label"><i class="chart-legend-dot" style="background:#E0736A"></i>Pengeluaran</span>
+                <span class="chart-legend-value" id="legendExpense">Rp 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Kategori Teratas</div>
+              <div class="panel-title-sub">Pengeluaran terbesar bulan ini</div>
+            </div>
+          </div>
+          <div class="category-list" id="categoryList"></div>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-bottom:16px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Saldo per Akun</div>
+            <div class="panel-title-sub">Ringkasan cepat &middot; nominal asli tiap mata uang (lihat halaman Rekening &amp; E-Wallet untuk detail)</div>
+          </div>
+        </div>
+        <div class="accounts-grid" id="accountsGrid"></div>
+      </section>
+
+      <section class="history-panel">
+        <div class="history-header">
+          <div class="panel-title">Riwayat Transaksi</div>
+          <div class="filters">
+            <select class="filter-select" id="filterType">
+              <option value="all">Semua Jenis</option>
+              <option value="income">Pemasukan</option>
+              <option value="expense">Pengeluaran</option>
+              <option value="exchange">Tukar Kurs</option>
+            </select>
+            <select class="filter-select" id="filterCategory">
+              <option value="all">Semua Kategori</option>
+            </select>
+          </div>
+        </div>
+        <div class="transaction-list" id="transactionList"></div>
+      </section>
+
+    </section>
+
+    <!-- ================================================================
+         PAGE 2 — REKENING & E-WALLET
+    ================================================================= -->
+    <section class="page" id="page-rekening">
+
+      <section class="stat-card stat-card--balance" style="margin-bottom:20px;">
+        <div class="stat-label">
+          <div class="stat-icon-badge stat-icon-badge--balance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
+          </div>
+          Total Kekayaan Bersih (Net Worth)
+        </div>
+        <div class="stat-value"><span class="stat-currency">Rp</span><span id="rekeningNetWorth">0</span></div>
+        <div class="field-hint" style="color:rgba(255,255,255,0.45); margin-top:14px;">Dihitung memakai kurs acuan tetap 1 LKR = 54 IDR agar nilai gabungan stabil saat dipantau sekilas.</div>
+      </section>
+
+      <section class="panel" style="margin-bottom:16px;">
+        <div class="subsection-title">
+          <span class="subsection-tag tag-idr">Rp</span> Kelompok Saldo IDR (Aset Indonesia)
+        </div>
+        <div class="accounts-grid" id="idrAccountsGrid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="subsection-title">
+          <span class="subsection-tag tag-lkr">Rs</span> Kelompok Saldo LKR (Aset Sri Lanka)
+        </div>
+        <div class="accounts-grid" id="lkrAccountsGrid"></div>
+      </section>
+
+    </section>
+
+    <!-- ================================================================
+         PAGE 3 — LAPORAN & ANALITIK
+    ================================================================= -->
+    <section class="page" id="page-laporan">
+      <section class="panel-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Distribusi Keuangan</div>
+              <div class="panel-title-sub">Pemasukan vs pengeluaran secara keseluruhan</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-canvas-box chart-canvas-box--lg"><canvas id="reportChart"></canvas></div>
+            <div class="chart-legend">
+              <div class="chart-legend-row">
+                <span class="chart-legend-label"><i class="chart-legend-dot" style="background:var(--emerald)"></i>Pemasukan</span>
+                <span class="chart-legend-value" id="reportLegendIncome">Rp 0</span>
+              </div>
+              <div class="chart-legend-row">
+                <span class="chart-legend-label"><i class="chart-legend-dot" style="background:#E0736A"></i>Pengeluaran</span>
+                <span class="chart-legend-value" id="reportLegendExpense">Rp 0</span>
+              </div>
+              <div class="chart-legend-row">
+                <span class="chart-legend-label"><i class="chart-legend-dot" style="background:#161A18"></i>Saldo Bersih</span>
+                <span class="chart-legend-value" id="reportLegendBalance">Rp 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Rincian per Kategori</div>
+              <div class="panel-title-sub">Seluruh kategori pengeluaran</div>
+            </div>
+          </div>
+          <div class="category-list" id="reportCategoryList"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Perbandingan Antar Kategori</div>
+            <div class="panel-title-sub">Total pengeluaran tiap kategori</div>
+          </div>
+        </div>
+        <div style="height:260px;"><canvas id="reportBarChart"></canvas></div>
+      </section>
+    </section>
+
+    <!-- ================================================================
+         PAGE 4 — MANAJEMEN ANGGARAN
+    ================================================================= -->
+    <section class="page" id="page-anggaran">
+      <section class="panel" style="margin-bottom:16px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Atur Anggaran Bulanan</div>
+            <div class="panel-title-sub">Tetapkan batas pengeluaran untuk tiap kategori, lalu pantau progresnya secara real-time. Nominal batas anggaran selalu dalam basis Rupiah (IDR).</div>
+          </div>
+        </div>
+      </section>
+      <div class="budget-grid" id="budgetGrid"></div>
+    </section>
+
+    <!-- ================================================================
+         PAGE 5 — MANAJEMEN INVESTASI
+    ================================================================= -->
+    <section class="page" id="page-investasi">
+      <div class="invest-layout">
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Tambah Investasi Baru</div>
+              <div class="panel-title-sub">Catat instrumen yang sudah kamu beli</div>
+            </div>
+          </div>
+          <form id="investForm">
+            <div class="field">
+              <label class="field-label" for="investCategory">Kategori Investasi</label>
+              <select id="investCategory" class="field-select">
+                <option value="pasar-modal">Pasar Modal</option>
+                <option value="perbankan">Perbankan &amp; Surat Berharga</option>
+                <option value="logam-mulia">Logam Mulia</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="investInstrument">Nama Instrumen</label>
+              <input type="text" id="investInstrument" class="field-input" placeholder="Contoh: Saham BBCA" list="investInstrumentSuggestions" autocomplete="off">
+              <datalist id="investInstrumentSuggestions"></datalist>
+              <div class="field-error" id="errorInvestInstrument">Nama instrumen wajib diisi</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="investQty">Jumlah Saldo (Unit/Kuantitas)</label>
+              <input type="text" inputmode="decimal" id="investQty" class="field-input" placeholder="Contoh: 100 lembar / 2.5 gram">
+              <div class="field-error" id="errorInvestQty">Jumlah saldo/unit harus lebih dari 0</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="investPrice">Harga Beli</label>
+              <div class="amount-input-wrap">
+                <span class="field-prefix">Rp</span>
+                <input type="text" inputmode="numeric" id="investPrice" class="field-input" placeholder="0">
+              </div>
+              <div class="field-error" id="errorInvestPrice">Harga beli harus lebih dari 0</div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label" for="investDate">Tanggal Beli</label>
+              <input type="date" id="investDate" class="field-input">
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top:18px; width:100%; justify-content:center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Simpan Investasi</span>
+            </button>
+          </form>
+        </section>
+
+        <div>
+          <div class="accordion is-open" data-cat="pasar-modal" id="accordion-pasar-modal">
+            <button type="button" class="accordion-header" data-accordion-toggle="pasar-modal">
+              <div class="accordion-header-left">
+                <span class="accordion-title">Pasar Modal</span>
+                <span class="accordion-count" id="count-pasar-modal">0</span>
+              </div>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-body" id="body-pasar-modal">
+              <div id="investList-pasar-modal"></div>
+            </div>
+          </div>
+
+          <div class="accordion" data-cat="perbankan" id="accordion-perbankan">
+            <button type="button" class="accordion-header" data-accordion-toggle="perbankan">
+              <div class="accordion-header-left">
+                <span class="accordion-title">Perbankan &amp; Surat Berharga</span>
+                <span class="accordion-count" id="count-perbankan">0</span>
+              </div>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-body" id="body-perbankan">
+              <div id="investList-perbankan"></div>
+            </div>
+          </div>
+
+          <div class="accordion" data-cat="logam-mulia" id="accordion-logam-mulia">
+            <button type="button" class="accordion-header" data-accordion-toggle="logam-mulia">
+              <div class="accordion-header-left">
+                <span class="accordion-title">Logam Mulia</span>
+                <span class="accordion-count" id="count-logam-mulia">0</span>
+              </div>
+              <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="accordion-body" id="body-logam-mulia">
+              <div id="investList-logam-mulia"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PAGE 6 — TARGET & IMPIAN
+    ================================================================= -->
+    <section class="page" id="page-target">
+
+      <section class="panel" style="margin-bottom:16px;">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Target Keuangan &amp; Impian</div>
+            <div class="panel-title-sub">Progres dihitung otomatis dari total gabungan saldo riil Kantong Indonesia + Kantong Sri Lanka</div>
+          </div>
+          <button class="btn btn-primary" id="btnOpenAddGoal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Tambah Target</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="goals-grid" id="goalsGrid"></div>
+
+    </section>
+
+    <!-- ================================================================
+         PAGE 7 — EDUKASI FINANSIAL
+    ================================================================= -->
+    <section class="page" id="page-edukasi">
+      <section class="panel" style="margin-bottom:20px;">
+        <div class="panel-title">Kenapa Literasi Finansial Penting?</div>
+        <div class="panel-title-sub" style="margin-top:6px; max-width:640px;">
+          Mengelola uang bukan cuma soal mencatat, tapi soal membuat keputusan yang tepat setiap hari. Berikut beberapa hal penting yang perlu kamu pahami.
+        </div>
+      </section>
+
+      <div class="edu-grid">
+        <div class="edu-card">
+          <span class="edu-card-tag tone-emerald">Menabung</span>
+          <div class="edu-card-icon tone-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 9h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><circle cx="15" cy="14" r="1.4" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="edu-card-title">Mulai dari Konsisten, Bukan Besarnya Nominal</div>
+          <div class="edu-card-body">Menabung Rp50.000 setiap minggu jauh lebih efektif daripada menunggu punya uang "lebih". Konsistensi kecil yang berulang membentuk kebiasaan finansial yang kuat dalam jangka panjang.</div>
+        </div>
+
+        <div class="edu-card">
+          <span class="edu-card-tag tone-emerald">Dana Darurat</span>
+          <div class="edu-card-icon tone-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-4Z"/><path d="M12 8v5"/><circle cx="12" cy="16" r="0.8" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="edu-card-title">Siapkan Dana Darurat Sebelum Berinvestasi</div>
+          <div class="edu-card-body">Idealnya dana darurat mencapai 3–6 kali pengeluaran bulanan. Dana ini jadi pelindung pertama saat ada kondisi tak terduga, sehingga kamu tidak perlu berutang atau menjual aset investasi.</div>
+        </div>
+
+        <div class="edu-card">
+          <span class="edu-card-tag tone-rose">Perilaku Konsumtif</span>
+          <div class="edu-card-icon tone-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+          </div>
+          <div class="edu-card-title">Waspadai Jebakan Belanja Impulsif</div>
+          <div class="edu-card-body">Diskon dan promo dirancang untuk membuat kita membeli barang yang sebenarnya tidak dibutuhkan. Beri jeda 24 jam sebelum membeli barang non-esensial agar keputusan lebih rasional.</div>
+        </div>
+
+        <div class="edu-card">
+          <span class="edu-card-tag tone-rose">Utang Konsumtif</span>
+          <div class="edu-card-icon tone-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M2 10h20"/></svg>
+          </div>
+          <div class="edu-card-title">Hindari Utang untuk Gaya Hidup</div>
+          <div class="edu-card-body">Cicilan atau paylater untuk barang konsumtif menciptakan beban di masa depan tanpa nilai tambah. Gunakan utang hanya untuk hal produktif yang punya potensi hasil lebih besar dari bunganya.</div>
+        </div>
+
+        <div class="edu-card">
+          <span class="edu-card-tag tone-emerald">Anggaran</span>
+          <div class="edu-card-icon tone-emerald">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9"/><path d="M12 19V5"/><path d="M20 19v-7"/></svg>
+          </div>
+          <div class="edu-card-title">Terapkan Aturan 50/30/20</div>
+          <div class="edu-card-body">Alokasikan 50% penghasilan untuk kebutuhan pokok, 30% untuk keinginan, dan 20% untuk tabungan atau investasi. Formula sederhana ini membantu menjaga keseimbangan finansial jangka panjang.</div>
+        </div>
+
+        <div class="edu-card">
+          <span class="edu-card-tag tone-rose">Gaya Hidup</span>
+          <div class="edu-card-icon tone-rose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </div>
+          <div class="edu-card-title">Jangan Terjebak Gaya Hidup Ikut-ikutan</div>
+          <div class="edu-card-body">Membandingkan gaya hidup dengan orang lain di media sosial sering memicu pengeluaran yang tidak perlu. Fokus pada tujuan keuanganmu sendiri, bukan standar orang lain.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PAGE 8 — PANDUAN PENGGUNA
+    ================================================================= -->
+    <section class="page" id="page-panduan">
+
+      <section class="panel" style="margin-bottom:16px;">
+        <div class="panel-title">Panduan Pengguna dimerla</div>
+        <div class="panel-title-sub" style="margin-top:6px; max-width:640px;">
+          Ringkasan cara kerja fitur-fitur utama dimerla. Klik tiap topik untuk membuka penjelasan lengkapnya.
+        </div>
+      </section>
+
+      <div id="guideAccordionWrap">
+
+        <div class="accordion is-open" data-guide="dua-kantong" id="guide-dua-kantong">
+          <button type="button" class="accordion-header" data-guide-toggle="dua-kantong">
+            <div class="accordion-header-left">
+              <span class="guide-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2"/><path d="M3 10h18"/></svg>
+              </span>
+              <span class="accordion-title">1. Sistem Dua Kantong Saldo</span>
+            </div>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-body" id="guide-body-dua-kantong">
+            <div class="guide-content">
+              <p>dimerla memisahkan uangmu menjadi dua kantong yang benar-benar terpisah secara riil, bukan sekadar tampilan:</p>
+              <ul>
+                <li><strong>Kantong Indonesia (IDR)</strong> — mencakup BCA, BNI, BRI, Mandiri, Seabank, Bank Jago, Neo Bank, Permata Bank, DANA, OVO, GoPay, LinkAja, Sakuku, serta bank/e-wallet kustom yang kamu tambahkan sendiri.</li>
+                <li><strong>Kantong Sri Lanka (LKR)</strong> — khusus Sampath Bank dan Cash LKR (uang tunai fisik).</li>
+              </ul>
+              <p>Setiap transaksi Pemasukan/Pengeluaran hanya memotong atau menambah saldo di kantong sesuai mata uang yang kamu pilih saat itu. Saldo IDR tidak akan pernah tercampur otomatis dengan saldo LKR, kecuali kamu mencatatnya lewat fitur Tukar Kurs. Lihat rincian saldo tiap kantong secara lengkap di halaman <strong>Rekening &amp; E-Wallet</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" data-guide="toggle-kurs" id="guide-toggle-kurs">
+          <button type="button" class="accordion-header" data-guide-toggle="toggle-kurs">
+            <div class="accordion-header-left">
+              <span class="guide-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/></svg>
+              </span>
+              <span class="accordion-title">2. Toggle Kurs Utama (Header)</span>
+            </div>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-body" id="guide-body-toggle-kurs">
+            <div class="guide-content">
+              <p>Tombol <strong>IDR / LKR</strong> di pojok kanan atas adalah sakelar tampilan, bukan pengubah data. Menekannya akan langsung mengonversi seluruh angka <em>gabungan</em> di aplikasi (Total Saldo/Net Worth, Pemasukan, Pengeluaran, anggaran terpakai, dan kartu Target &amp; Impian) memakai kurs acuan tetap <strong>1 LKR = 54 IDR</strong>.</p>
+              <p>Nominal asli tiap akun di halaman Rekening &amp; E-Wallet tetap ditampilkan apa adanya (Rp untuk kantong Indonesia, Rs untuk kantong Sri Lanka) agar kamu selalu tahu jumlah uang yang benar-benar kamu miliki di masing-masing kantong, terlepas dari posisi toggle.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" data-guide="tukar-kurs" id="guide-tukar-kurs">
+          <button type="button" class="accordion-header" data-guide-toggle="tukar-kurs">
+            <div class="accordion-header-left">
+              <span class="guide-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+              <span class="accordion-title">3. Fitur Tukar Kurs (Currency Exchange)</span>
+            </div>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-body" id="guide-body-tukar-kurs">
+            <div class="guide-content">
+              <p>Gunakan fitur ini saat kamu menukar uang lewat agen dengan kurs yang berubah-ubah setiap hari. Caranya:</p>
+              <ol>
+                <li>Klik <strong>Tambah Transaksi</strong>, lalu pilih tab <strong>Tukar Kurs</strong>.</li>
+                <li>Pilih <strong>Akun Asal</strong> (tempat uang diambil) dan <strong>Akun Tujuan</strong> (tempat uang diterima).</li>
+                <li>Masukkan jumlah nominal yang dilepas dari akun asal.</li>
+                <li>Ketik <strong>nilai kurs hari itu</strong> secara manual (misal 52.5, 53, atau 55) — angka ini tidak terkunci di 54, jadi selalu presisi sesuai kurs agen yang sebenarnya.</li>
+                <li>dimerla otomatis menghitung jumlah yang diterima di akun tujuan, lalu memotong saldo akun asal dan menambah saldo akun tujuan secara sinkron begitu transaksi disimpan.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" data-guide="investasi" id="guide-investasi">
+          <button type="button" class="accordion-header" data-guide-toggle="investasi">
+            <div class="accordion-header-left">
+              <span class="guide-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 6-8"/><path d="M14 7h5v5"/></svg>
+              </span>
+              <span class="accordion-title">4. Manajemen Portofolio Investasi</span>
+            </div>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-body" id="guide-body-investasi">
+            <div class="guide-content">
+              <p>Halaman Manajemen Investasi membagi portofolio ke dalam 3 kategori: <strong>Pasar Modal</strong> (saham, obligasi, reksa dana, dsb.), <strong>Perbankan &amp; Surat Berharga</strong> (deposito, ORI, SBR, dsb.), dan <strong>Logam Mulia</strong> (emas, perak, dsb.).</p>
+              <p>Untuk tiap catatan, isi <strong>Nama Instrumen</strong>, <strong>Jumlah Saldo/Unit</strong> (kuantitas yang kamu miliki, misal lembar saham atau gram emas), <strong>Harga Beli</strong>, dan <strong>Tanggal Beli</strong>. Riwayat akan tampil ringkas di dalam accordion sesuai kategorinya, tanpa perhitungan untung/rugi otomatis — cukup sebagai catatan histori kepemilikanmu.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" data-guide="target-impian" id="guide-target-impian">
+          <button type="button" class="accordion-header" data-guide-toggle="target-impian">
+            <div class="accordion-header-left">
+              <span class="guide-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+              </span>
+              <span class="accordion-title">5. Halaman Target &amp; Impian</span>
+            </div>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-body" id="guide-body-target-impian">
+            <div class="guide-content">
+              <p>Buat target bebas seperti "Biaya Nikah" atau "Modal Bisnis Kampung" dengan nominal target (IDR atau LKR, bebas pilih) dan bulan-tahun target menggunakan month picker.</p>
+              <p>Progres <strong>tidak diisi manual</strong> — dimerla membaca otomatis total gabungan saldo riil Kantong Indonesia + Kantong Sri Lanka (dikonversi ke kurs acuan) lalu membandingkannya dengan nominal targetmu.</p>
+              <p>Kalkulator simulasi di tiap kartu menghitung <strong>berapa yang wajib kamu sisihkan tiap bulan</strong> memakai rumus:</p>
+              <p style="font-family:var(--font-mono); font-size:12.5px; background:var(--surface-sunken); padding:10px 14px; border-radius:var(--radius-sm);">Wajib Menabung/Bulan = (Nominal Target − Saldo Terkumpul) &divide; Sisa Bulan</p>
+              <p>Kalau saldo gabunganmu sudah melebihi nominal target, kartu akan menampilkan status <strong>Target Tercapai</strong> beserta ucapan selamat.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================================
+         PAGE 9 — PROFIL & PENGATURAN
+    ================================================================= -->
+    <section class="page" id="page-profil">
+      <div class="profile-grid">
+        <div class="panel">
+          <div class="profile-avatar" id="profileAvatarInitial">F</div>
+          <div class="field">
+            <label class="field-label" for="inputProfileName">Nama Pengguna</label>
+            <input type="text" id="inputProfileName" class="field-input" placeholder="Masukkan nama kamu">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label class="field-label" for="inputProfileEmail">Email (opsional)</label>
+            <input type="email" id="inputProfileEmail" class="field-input" placeholder="nama@email.com">
+          </div>
+          <button class="btn btn-primary" id="btnSaveProfile" style="margin-top:16px; width:100%; justify-content:center;">Simpan Profil</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="panel">
+            <div class="panel-title" style="margin-bottom:8px;">Preferensi Tampilan</div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">Sembunyikan nominal saldo</div>
+                <div class="settings-row-sub">Tampilkan saldo sebagai •••• di Dashboard</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggleHideBalance">
+                <span class="switch-track"></span>
+              </label>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">Notifikasi transaksi</div>
+                <div class="settings-row-sub">Tampilkan notifikasi saat transaksi berhasil disimpan</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggleNotif" checked>
+                <span class="switch-track"></span>
+              </label>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="settings-row-label">Mata uang tampilan</div>
+                <div class="settings-row-sub">1 LKR = 54 IDR &middot; hanya memengaruhi tampilan ringkasan gabungan</div>
+              </div>
+              <div class="currency-toggle" id="currencyToggleSettings">
+                <button type="button" class="currency-toggle-btn" data-currency="IDR">IDR</button>
+                <button type="button" class="currency-toggle-btn" data-currency="LKR">LKR</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title" style="margin-bottom:12px;">Zona Berbahaya</div>
+            <div class="danger-zone">
+              <div class="danger-zone-text">Menghapus semua data akan menghilangkan seluruh transaksi, anggaran, dan investasi secara permanen.</div>
+              <button class="btn btn-danger" id="btnResetData">Hapus Semua Data</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- ============ BOTTOM NAVIGATION BAR (MOBILE ONLY) ============ -->
+<nav class="bottom-nav" id="bottomNav">
+  <button type="button" class="bottom-nav-item is-active" data-bottom-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+    <span>Dashboard</span>
+    <i class="bottom-nav-dot"></i>
+  </button>
+  <button type="button" class="bottom-nav-item" data-bottom-page="rekening">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2"/><path d="M3 10h18"/></svg>
+    <span>Rekening</span>
+    <i class="bottom-nav-dot"></i>
+  </button>
+  <button type="button" class="bottom-nav-item" data-bottom-page="target">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+    <span>Target</span>
+    <i class="bottom-nav-dot"></i>
+  </button>
+  <button type="button" class="bottom-nav-item" id="btnBottomMenu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    <span>Lainnya</span>
+  </button>
+</nav>
+
+<!-- ============ MODAL ADD/EDIT TRANSAKSI (GLOBAL) ============ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Tambah Transaksi</div>
+      <button class="modal-close" id="btnCloseModal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="txForm">
+      <div class="modal-body">
+
+        <div class="type-toggle" id="typeToggle">
+          <button type="button" data-type="income" id="btnTypeIncome">Pemasukan</button>
+          <button type="button" data-type="expense" id="btnTypeExpense">Pengeluaran</button>
+          <button type="button" data-type="exchange" id="btnTypeExchange">Tukar Kurs</button>
+        </div>
+
+        <!-- ===== FORM: PEMASUKAN / PENGELUARAN ===== -->
+        <div id="formIncomeExpense">
+          <div class="field">
+            <label class="field-label" for="inputName">Nama Transaksi</label>
+            <input type="text" id="inputName" class="field-input" placeholder="Contoh: Gaji Bulanan">
+            <div class="field-error" id="errorName">Nama transaksi wajib diisi</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Mata Uang Transaksi</label>
+            <div class="mini-toggle" id="txCurrencyToggle">
+              <button type="button" data-tx-currency="IDR" class="is-active">IDR &middot; Rp</button>
+              <button type="button" data-tx-currency="LKR">LKR &middot; Rs</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="inputAmount">Nominal</label>
+            <div class="amount-input-wrap">
+              <span class="field-prefix" id="inputAmountPrefix">Rp</span>
+              <input type="text" inputmode="numeric" id="inputAmount" class="field-input" placeholder="0">
+            </div>
+            <div class="field-error" id="errorAmount">Nominal harus lebih dari 0</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="inputCategory">Kategori</label>
+            <select id="inputCategory" class="field-select"></select>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="inputAccount">Sumber Dana / Akun</label>
+            <select id="inputAccount" class="field-select">
+              <option value="" disabled selected>Pilih sumber dana</option>
+            </select>
+            <div class="field-error" id="errorAccount">Pilih sumber dana / akun terlebih dahulu</div>
+            <div id="customAccountWrap" style="display:none; margin-top:10px;">
+              <input type="text" id="inputAccountCustom" class="field-input" placeholder="Ketik nama bank/e-wallet baru">
+              <div class="field-error" id="errorAccountCustom">Nama akun wajib diisi</div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="inputDate">Tanggal</label>
+            <input type="date" id="inputDate" class="field-input">
+          </div>
+        </div>
+
+        <!-- ===== FORM: TUKAR KURS / CURRENCY EXCHANGE ===== -->
+        <div id="formExchange" style="display:none;">
+          <div class="field">
+            <label class="field-label" for="inputExFromAccount">Akun Asal</label>
+            <select id="inputExFromAccount" class="field-select"></select>
+            <div class="field-error" id="errorExFrom">Pilih akun asal</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="inputExToAccount">Akun Tujuan</label>
+            <select id="inputExToAccount" class="field-select"></select>
+            <div class="field-error" id="errorExTo">Pilih akun tujuan yang berbeda dari akun asal</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="inputExAmount">Jumlah Nominal yang Dilepas</label>
+            <div class="amount-input-wrap">
+              <span class="field-prefix" id="inputExAmountPrefix">Rp</span>
+              <input type="text" inputmode="numeric" id="inputExAmount" class="field-input" placeholder="0">
+            </div>
+            <div class="field-error" id="errorExAmount">Nominal harus lebih dari 0</div>
+          </div>
+
+          <div class="field" id="fieldExRate">
+            <label class="field-label" for="inputExRate">Nilai Kurs Transaksi Saat Ini (1 LKR = ? IDR)</label>
+            <input type="text" inputmode="decimal" id="inputExRate" class="field-input" placeholder="Contoh: 52.5 / 53 / 55" value="54">
+            <div class="field-error" id="errorExRate">Kurs harus lebih dari 0</div>
+            <div class="field-hint">Kurs agen selalu berubah &mdash; tidak terkunci di angka 54.</div>
+          </div>
+
+          <div class="exchange-preview">
+            <span id="exPreviewSent">Rp 0</span>
+            <span class="arrow">&rarr;</span>
+            <span id="exPreviewReceived">Rp 0</span>
+          </div>
+
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="inputExDate">Tanggal</label>
+            <input type="date" id="inputExDate" class="field-input">
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="btnCancelModal">Batal</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Simpan Transaksi</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MODAL ADD/EDIT TARGET & IMPIAN (GLOBAL) ============ -->
+<div class="modal-overlay" id="goalModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="goalModalTitle">Tambah Target Baru</div>
+      <button class="modal-close" id="btnCloseGoalModal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="goalForm">
+      <div class="modal-body">
+
+        <div class="field">
+          <label class="field-label" for="inputGoalName">Nama Target</label>
+          <input type="text" id="inputGoalName" class="field-input" placeholder="Contoh: Biaya Nikah, Modal Bisnis Kampung">
+          <div class="field-error" id="errorGoalName">Nama target wajib diisi</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Mata Uang Target</label>
+          <div class="mini-toggle" id="goalCurrencyToggle">
+            <button type="button" data-goal-currency="IDR" class="is-active">IDR &middot; Rp</button>
+            <button type="button" data-goal-currency="LKR">LKR &middot; Rs</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="inputGoalAmount">Nominal Target</label>
+          <div class="amount-input-wrap">
+            <span class="field-prefix" id="inputGoalAmountPrefix">Rp</span>
+            <input type="text" inputmode="numeric" id="inputGoalAmount" class="field-input" placeholder="0">
+          </div>
+          <div class="field-error" id="errorGoalAmount">Nominal target harus lebih dari 0</div>
+        </div>
+
+        <div class="field" style="margin-bottom:0">
+          <label class="field-label" for="inputGoalMonth">Target Waktu (Bulan &amp; Tahun)</label>
+          <input type="month" id="inputGoalMonth" class="field-input">
+          <div class="field-error" id="errorGoalMonth">Pilih bulan dan tahun target</div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" id="btnCancelGoalModal">Batal</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitGoal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Simpan Target</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     CONSTANTS & ICONS
+  ============================================================ */
+  const STORAGE_KEY = 'dimerla_transactions';
+  const BUDGET_KEY = 'dimerla_budgets';
+  const PROFILE_KEY = 'dimerla_profile';
+  const SETTINGS_KEY = 'dimerla_settings';
+  const INVESTMENTS_KEY = 'dimerla_investments';
+  const CURRENCY_KEY = 'dimerla_currency';
+  const GOALS_KEY = 'dimerla_goals';
+
+  const LKR_RATE = 54; // 1 LKR = 54 IDR (kurs acuan tetap, hanya untuk visualisasi/gabungan)
+
+  const ICONS = {
+    'Gaji': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>',
+    'Bonus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11" rx="1.5"/><path d="M3 13h18"/><path d="M12 9v11"/><path d="M12 9c-1.5-3-5-3-5-.5S9 9 12 9Z"/><path d="M12 9c1.5-3 5-3 5-.5S15 9 12 9Z"/></svg>',
+    'Freelance': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M2 19h20"/></svg>',
+    'Lainnya-in': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+    'Makan': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M17 3c-1.5 0-3 1.5-3 4.5S15.5 12 17 12v9"/></svg>',
+    'Internet': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a16 16 0 0 1 18 0"/><path d="M6.5 13a10 10 0 0 1 11 0"/><path d="M10 17a5 5 0 0 1 4 0"/><circle cx="12" cy="20" r="0.8" fill="currentColor" stroke="none"/></svg>',
+    'Nongkrong': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-5Z"/><path d="M16 11h2a2 2 0 0 1 0 4h-2"/><path d="M8 3c0 1-1 1-1 2s1 1 1 2"/><path d="M12 3c0 1-1 1-1 2s1 1 1 2"/></svg>',
+    'Investasi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 6-8"/><path d="M14 7h5v5"/></svg>',
+    'Kirim Keluarga': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L21 4l-7.5 18-2.7-7.8L3 11.5Z"/></svg>',
+    'Sabun / Kebutuhan Rumah': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>',
+    'Belanja Lainnya': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>'
+  };
+
+  const ICON_EXCHANGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3"/><path d="M20 17H7l3 3"/></svg>';
+
+  const CATEGORIES = {
+    income: ['Gaji', 'Bonus', 'Freelance', 'Lainnya-in'],
+    expense: ['Makan', 'Internet', 'Nongkrong', 'Investasi', 'Kirim Keluarga', 'Sabun / Kebutuhan Rumah', 'Belanja Lainnya']
+  };
+
+  const CATEGORY_LABEL = { 'Lainnya-in': 'Lainnya' };
+
+  function categoryLabel(cat){ return CATEGORY_LABEL[cat] || cat; }
+  function categoryIcon(cat){ return ICONS[cat] || ICONS['Belanja Lainnya']; }
+
+  // ---- Kelompok akun berdasarkan mata uang ----
+  const IDR_ACCOUNTS_DEFAULT = ['BCA', 'BNI', 'BRI', 'MANDIRI', 'SEABANK', 'BANK JAGO', 'NEO BANK', 'PERMATA BANK', 'DANA', 'OVO', 'GOPAY', 'LINK AJA', 'SAKUKU'];
+  const LKR_ACCOUNTS = ['SAMPATH BANK', 'CASH LKR'];
+  const EWALLET_NAMES = ['DANA', 'OVO', 'GOPAY', 'LINK AJA', 'SAKUKU'];
+
+  const ICON_BANK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="12" rx="2"/><path d="M2 11h20"/></svg>';
+  const ICON_EWALLET = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M16 13h2"/></svg>';
+  const ICON_CASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  function accountIcon(acc){
+    if(acc === 'CASH LKR') return ICON_CASH;
+    if(LKR_ACCOUNTS.indexOf(acc) > -1) return ICON_BANK;
+    if(EWALLET_NAMES.indexOf(acc) > -1) return ICON_EWALLET;
+    return ICON_BANK;
+  }
+
+  function isLkrAccount(acc){ return LKR_ACCOUNTS.indexOf(acc) > -1; }
+  function accountCurrency(acc){ return isLkrAccount(acc) ? 'LKR' : 'IDR'; }
+
+  const INVESTMENT_INSTRUMENTS = {
+    'pasar-modal': ['Saham', 'Obligasi', 'SUN', 'Sukuk Negara', 'Sukuk Korporasi', 'Reksa Dana', 'ETF', 'DIRE', 'EBA', 'Waran', 'Right Issue', 'Depositary Receipt'],
+    'perbankan': ['Deposito Berjangka', 'Deposito Valas', 'Tabungan Berjangka', 'Sertifikat Deposito', 'ORI', 'SBR', 'Sukuk Ritel', 'ST', 'FR', 'SPN'],
+    'logam-mulia': ['Emas Batangan', 'Emas Digital', 'Perak', 'Platinum', 'Palladium']
+  };
+  const INVESTMENT_CATEGORY_LABEL = {
+    'pasar-modal': 'Pasar Modal',
+    'perbankan': 'Perbankan & Surat Berharga',
+    'logam-mulia': 'Logam Mulia'
+  };
+  const ACCORDION_CATS = ['pasar-modal', 'perbankan', 'logam-mulia'];
+
+  const PAGE_META = {
+    dashboard:  { title: 'Dashboard', subtitle: 'Ringkasan keuangan kamu hari ini' },
+    rekening:   { title: 'Rekening & E-Wallet', subtitle: 'Kelola saldo bank dan e-wallet berdasarkan mata uang' },
+    laporan:    { title: 'Laporan & Analitik', subtitle: 'Pahami arus kas kamu lebih dalam' },
+    anggaran:   { title: 'Manajemen Anggaran', subtitle: 'Tetapkan dan pantau batas pengeluaran per kategori' },
+    investasi:  { title: 'Manajemen Investasi', subtitle: 'Catat dan pantau instrumen investasi kamu' },
+    target:     { title: 'Target & Impian', subtitle: 'Wujudkan rencana keuanganmu dengan simulasi otomatis' },
+    edukasi:    { title: 'Edukasi Finansial', subtitle: 'Wawasan singkat untuk keputusan finansial yang lebih baik' },
+    panduan:    { title: 'Panduan Pengguna', subtitle: 'Pelajari cara memaksimalkan fitur-fitur dimerla' },
+    profil:     { title: 'Profil & Pengaturan', subtitle: 'Kelola akun dan preferensi aplikasi' }
+  };
+
+  const MONTHS_ID_FULL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  /* ============================================================
+     STATE
+  ============================================================ */
+  let transactions = loadJSON(STORAGE_KEY, []);
+  let budgets = loadJSON(BUDGET_KEY, {});
+  let profile = loadJSON(PROFILE_KEY, { name: '', email: '' });
+  let settings = loadJSON(SETTINGS_KEY, { hideBalance: false, notif: true });
+  let investments = loadJSON(INVESTMENTS_KEY, []);
+  let currentCurrency = loadJSON(CURRENCY_KEY, 'IDR');
+  let goals = loadJSON(GOALS_KEY, []);
+
+  let currentType = 'income';        // income | expense | exchange
+  let currentTxCurrency = 'IDR';     // IDR | LKR (untuk form income/expense)
+  let currentGoalCurrency = 'IDR';   // IDR | LKR (untuk form Target & Impian)
+  let editingId = null;
+  let editingGoalId = null;
+  let pendingDeleteId = null;
+  let currentPage = 'dashboard';
+
+  let mainChartInstance = null;
+  let reportChartInstance = null;
+  let reportBarChartInstance = null;
+
+  function loadJSON(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){ return fallback; }
+  }
+  function saveJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+  function saveTransactions(){ saveJSON(STORAGE_KEY, transactions); }
+  function saveBudgets(){ saveJSON(BUDGET_KEY, budgets); }
+  function saveProfile(){ saveJSON(PROFILE_KEY, profile); }
+  function saveSettings(){ saveJSON(SETTINGS_KEY, settings); }
+  function saveInvestments(){ saveJSON(INVESTMENTS_KEY, investments); }
+  function saveGoals(){ saveJSON(GOALS_KEY, goals); }
+
+  /* ============================================================
+     UTILITIES — FORMAT & KONVERSI
+  ============================================================ */
+  function formatRupiah(num){ return Math.round(num).toLocaleString('id-ID'); }
+
+  // fmtIDRRaw/fmtLKRRaw: menampilkan nominal ASLI tanpa konversi (dipakai di halaman Rekening & E-Wallet)
+  function fmtIDRRaw(amount){ return 'Rp ' + formatRupiah(amount); }
+  function fmtLKRRaw(amount){ return 'Rs ' + formatRupiah(amount); }
+  function fmtByCurrency(amount, currency){ return currency === 'LKR' ? fmtLKRRaw(amount) : fmtIDRRaw(amount); }
+
+  // fmtMoney: dipakai untuk angka GABUNGAN (Dashboard, Laporan, Anggaran, Investasi) —
+  // basis internal selalu IDR-equivalent, lalu dikonversi ke tampilan sesuai toggle mata uang header.
+  function currencySymbol(){ return currentCurrency === 'LKR' ? 'Rs' : 'Rp'; }
+  function convertForDisplay(amountIDR){ return currentCurrency === 'LKR' ? amountIDR / LKR_RATE : amountIDR; }
+  function formatConvertedNumber(amountIDR){ return formatRupiah(convertForDisplay(amountIDR)); }
+  function fmtMoney(amountIDR){ return currencySymbol() + ' ' + formatConvertedNumber(amountIDR); }
+
+  // Konversi nominal transaksi (dalam mata uang aslinya) menjadi basis IDR-equivalent,
+  // HANYA dipakai untuk ringkasan/agregat gabungan (kurs acuan tetap 54).
+  function toIDREquivalent(amount, currency){ return currency === 'LKR' ? amount * LKR_RATE : amount; }
+
+  function parseAmountInput(str){
+    const digits = str.replace(/[^0-9]/g, '');
+    return digits ? parseInt(digits, 10) : 0;
+  }
+  function formatAmountInput(str){
+    const num = parseAmountInput(str);
+    return num ? num.toLocaleString('id-ID') : '';
+  }
+  function parseQtyInput(str){
+    const cleaned = str.replace(/[^0-9.,]/g, '').replace(',', '.');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  }
+  function parseRateInput(str){
+    const cleaned = String(str).replace(/[^0-9.,]/g, '').replace(',', '.');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  }
+  function formatDateDisplay(dateStr){
+    const d = new Date(dateStr + 'T00:00:00');
+    const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /* ============================================================
+     DOM REFS
+  ============================================================ */
+  const el = {
+    appShell: document.getElementById('appShell'),
+    sidebar: document.getElementById('sidebar'),
+    sidebarOverlay: document.getElementById('sidebarOverlay'),
+    btnHamburger: document.getElementById('btnHamburger'),
+    btnCollapse: document.getElementById('btnCollapse'),
+    pageTitle: document.getElementById('pageTitle'),
+    pageSubtitle: document.getElementById('pageSubtitle'),
+    navItems: document.querySelectorAll('.nav-item'),
+    pages: document.querySelectorAll('.page'),
+    bottomNav: document.getElementById('bottomNav'),
+    bottomNavItems: document.querySelectorAll('.bottom-nav-item[data-bottom-page]'),
+    btnBottomMenu: document.getElementById('btnBottomMenu'),
+
+    btnOpenAdd: document.getElementById('btnOpenAdd'),
+    modalOverlay: document.getElementById('modalOverlay'),
+    btnCloseModal: document.getElementById('btnCloseModal'),
+    btnCancelModal: document.getElementById('btnCancelModal'),
+    modalTitle: document.getElementById('modalTitle'),
+    txForm: document.getElementById('txForm'),
+    btnTypeIncome: document.getElementById('btnTypeIncome'),
+    btnTypeExpense: document.getElementById('btnTypeExpense'),
+    btnTypeExchange: document.getElementById('btnTypeExchange'),
+    formIncomeExpense: document.getElementById('formIncomeExpense'),
+    formExchange: document.getElementById('formExchange'),
+
+    inputName: document.getElementById('inputName'),
+    txCurrencyToggle: document.getElementById('txCurrencyToggle'),
+    inputAmount: document.getElementById('inputAmount'),
+    inputAmountPrefix: document.getElementById('inputAmountPrefix'),
+    inputCategory: document.getElementById('inputCategory'),
+    inputAccount: document.getElementById('inputAccount'),
+    customAccountWrap: document.getElementById('customAccountWrap'),
+    inputAccountCustom: document.getElementById('inputAccountCustom'),
+    errorAccount: document.getElementById('errorAccount'),
+    errorAccountCustom: document.getElementById('errorAccountCustom'),
+    inputDate: document.getElementById('inputDate'),
+    errorName: document.getElementById('errorName'),
+    errorAmount: document.getElementById('errorAmount'),
+    btnSubmit: document.getElementById('btnSubmit'),
+
+    inputExFromAccount: document.getElementById('inputExFromAccount'),
+    inputExToAccount: document.getElementById('inputExToAccount'),
+    inputExAmount: document.getElementById('inputExAmount'),
+    inputExAmountPrefix: document.getElementById('inputExAmountPrefix'),
+    inputExRate: document.getElementById('inputExRate'),
+    fieldExRate: document.getElementById('fieldExRate'),
+    inputExDate: document.getElementById('inputExDate'),
+    exPreviewSent: document.getElementById('exPreviewSent'),
+    exPreviewReceived: document.getElementById('exPreviewReceived'),
+    errorExFrom: document.getElementById('errorExFrom'),
+    errorExTo: document.getElementById('errorExTo'),
+    errorExAmount: document.getElementById('errorExAmount'),
+    errorExRate: document.getElementById('errorExRate'),
+
+    statBalance: document.getElementById('statBalance'),
+    statIncome: document.getElementById('statIncome'),
+    statExpense: document.getElementById('statExpense'),
+    ratioIncome: document.getElementById('ratioIncome'),
+    ratioExpense: document.getElementById('ratioExpense'),
+    legendIncome: document.getElementById('legendIncome'),
+    legendExpense: document.getElementById('legendExpense'),
+    categoryList: document.getElementById('categoryList'),
+    accountsGrid: document.getElementById('accountsGrid'),
+    transactionList: document.getElementById('transactionList'),
+    filterType: document.getElementById('filterType'),
+    filterCategory: document.getElementById('filterCategory'),
+    toastStack: document.getElementById('toastStack'),
+
+    rekeningNetWorth: document.getElementById('rekeningNetWorth'),
+    idrAccountsGrid: document.getElementById('idrAccountsGrid'),
+    lkrAccountsGrid: document.getElementById('lkrAccountsGrid'),
+
+    reportLegendIncome: document.getElementById('reportLegendIncome'),
+    reportLegendExpense: document.getElementById('reportLegendExpense'),
+    reportLegendBalance: document.getElementById('reportLegendBalance'),
+    reportCategoryList: document.getElementById('reportCategoryList'),
+
+    budgetGrid: document.getElementById('budgetGrid'),
+
+    goalsGrid: document.getElementById('goalsGrid'),
+    btnOpenAddGoal: document.getElementById('btnOpenAddGoal'),
+    goalModalOverlay: document.getElementById('goalModalOverlay'),
+    goalModalTitle: document.getElementById('goalModalTitle'),
+    btnCloseGoalModal: document.getElementById('btnCloseGoalModal'),
+    btnCancelGoalModal: document.getElementById('btnCancelGoalModal'),
+    goalForm: document.getElementById('goalForm'),
+    inputGoalName: document.getElementById('inputGoalName'),
+    goalCurrencyToggle: document.getElementById('goalCurrencyToggle'),
+    inputGoalAmount: document.getElementById('inputGoalAmount'),
+    inputGoalAmountPrefix: document.getElementById('inputGoalAmountPrefix'),
+    inputGoalMonth: document.getElementById('inputGoalMonth'),
+    errorGoalName: document.getElementById('errorGoalName'),
+    errorGoalAmount: document.getElementById('errorGoalAmount'),
+    errorGoalMonth: document.getElementById('errorGoalMonth'),
+    btnSubmitGoal: document.getElementById('btnSubmitGoal'),
+
+    inputProfileName: document.getElementById('inputProfileName'),
+    inputProfileEmail: document.getElementById('inputProfileEmail'),
+    btnSaveProfile: document.getElementById('btnSaveProfile'),
+    profileAvatarInitial: document.getElementById('profileAvatarInitial'),
+    toggleHideBalance: document.getElementById('toggleHideBalance'),
+    toggleNotif: document.getElementById('toggleNotif'),
+    btnResetData: document.getElementById('btnResetData')
+  };
+
+  /* ============================================================
+     ROUTING (SPA NAVIGATION)
+  ============================================================ */
+  function navigateTo(page){
+    if(!PAGE_META[page]) return;
+    currentPage = page;
+
+    el.pages.forEach(function(sec){
+      sec.classList.toggle('is-active', sec.id === 'page-' + page);
+    });
+    el.navItems.forEach(function(btn){
+      btn.classList.toggle('is-active', btn.dataset.page === page);
+    });
+    el.bottomNavItems.forEach(function(btn){
+      btn.classList.toggle('is-active', btn.dataset.bottomPage === page);
+    });
+
+    el.pageTitle.textContent = PAGE_META[page].title;
+    el.pageSubtitle.textContent = PAGE_META[page].subtitle;
+
+    // "Tambah Transaksi" cuma relevan di halaman yang berkaitan langsung dengan transaksi
+    const hideAddBtn = (page === 'edukasi' || page === 'profil' || page === 'investasi' || page === 'rekening' || page === 'target' || page === 'panduan');
+    el.btnOpenAdd.style.display = hideAddBtn ? 'none' : 'inline-flex';
+
+    // Render ulang data halaman terkait supaya selalu real-time
+    if(page === 'dashboard') renderDashboard();
+    if(page === 'rekening') renderRekeningPage();
+    if(page === 'laporan') renderReportPage();
+    if(page === 'anggaran') renderBudgetPage();
+    if(page === 'investasi') renderInvestmentPage();
+    if(page === 'target') renderGoalsPage();
+    if(page === 'profil') renderProfilePage();
+
+    closeMobileSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  el.navItems.forEach(function(btn){
+    btn.addEventListener('click', function(){ navigateTo(btn.dataset.page); });
+  });
+
+  /* ---------- Bottom Navigation Bar (Mobile only) ---------- */
+  el.bottomNavItems.forEach(function(btn){
+    btn.addEventListener('click', function(){ navigateTo(btn.dataset.bottomPage); });
+  });
+  // Tombol "Lainnya ☰" memicu sidebar samping (overlay gelap + backdrop blur bawaan .sidebar-overlay)
+  el.btnBottomMenu.addEventListener('click', openMobileSidebar);
+
+  /* ---------- Sidebar: mobile drawer (auto-close saat pilih menu, lihat navigateTo) ---------- */
+  function openMobileSidebar(){
+    el.sidebar.classList.add('is-open');
+    el.sidebarOverlay.classList.add('is-open');
+  }
+  function closeMobileSidebar(){
+    el.sidebar.classList.remove('is-open');
+    el.sidebarOverlay.classList.remove('is-open');
+  }
+  el.btnHamburger.addEventListener('click', openMobileSidebar);
+  el.sidebarOverlay.addEventListener('click', closeMobileSidebar);
+
+  /* ---------- Sidebar: desktop collapse ---------- */
+  el.btnCollapse.addEventListener('click', function(){
+    el.appShell.classList.toggle('is-collapsed');
+  });
+
+  /* ============================================================
+     CURRENCY TOGGLE (HEADER) — hanya memengaruhi tampilan angka gabungan
+  ============================================================ */
+  function setCurrencyUIState(){
+    document.querySelectorAll('.currency-toggle-btn').forEach(function(btn){
+      btn.classList.toggle('is-active', btn.dataset.currency === currentCurrency);
+    });
+    document.querySelectorAll('.stat-currency').forEach(function(span){
+      span.textContent = currencySymbol();
+    });
+  }
+
+  function handleCurrencyChange(newCurrency){
+    if(newCurrency === currentCurrency) return;
+    currentCurrency = newCurrency;
+    saveJSON(CURRENCY_KEY, currentCurrency);
+    setCurrencyUIState();
+    // Segarkan halaman yang sedang aktif agar sinkron
+    renderCurrentPage();
+  }
+
+  document.querySelectorAll('.currency-toggle-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){ handleCurrencyChange(btn.dataset.currency); });
+  });
+
+  /* ============================================================
+     PERHITUNGAN SALDO & NET WORTH
+  ============================================================ */
+  function computeAccountBalances(){
+    // { accountName: balanceAsli (dalam mata uang akun tsb) }
+    const map = {};
+    transactions.forEach(function(t){
+      if(t.type === 'income' || t.type === 'expense'){
+        const acc = t.account || 'Tanpa Akun';
+        if(!map[acc]) map[acc] = 0;
+        map[acc] += (t.type === 'income' ? t.amount : -t.amount);
+      } else if(t.type === 'exchange'){
+        if(!map[t.fromAccount]) map[t.fromAccount] = 0;
+        if(!map[t.toAccount]) map[t.toAccount] = 0;
+        map[t.fromAccount] -= t.amountSent;
+        map[t.toAccount] += t.amountReceived;
+      }
+    });
+    return map;
+  }
+
+  function getIdrAccountList(){
+    const map = computeAccountBalances();
+    const set = IDR_ACCOUNTS_DEFAULT.slice();
+    Object.keys(map).forEach(function(acc){
+      if(!isLkrAccount(acc) && acc !== 'Tanpa Akun' && set.indexOf(acc) === -1) set.push(acc);
+    });
+    return set;
+  }
+
+  function computeNetWorthIDR(){
+    const map = computeAccountBalances();
+    let total = 0;
+    Object.keys(map).forEach(function(acc){
+      total += isLkrAccount(acc) ? (map[acc] * LKR_RATE) : map[acc];
+    });
+    return total;
+  }
+
+  function computeCategoryTotals(type){
+    // Mengembalikan total per kategori dalam basis IDR-equivalent (kurs tetap untuk agregat)
+    const totals = {};
+    transactions.filter(function(t){ return t.type === type; }).forEach(function(t){
+      const idrEq = toIDREquivalent(t.amount, t.currency || 'IDR');
+      totals[t.category] = (totals[t.category] || 0) + idrEq;
+    });
+    return totals;
+  }
+
+  function computeTotals(){
+    const totalIncome = transactions.filter(function(t){ return t.type === 'income'; })
+      .reduce(function(sum, t){ return sum + toIDREquivalent(t.amount, t.currency || 'IDR'); }, 0);
+    const totalExpense = transactions.filter(function(t){ return t.type === 'expense'; })
+      .reduce(function(sum, t){ return sum + toIDREquivalent(t.amount, t.currency || 'IDR'); }, 0);
+    return { totalIncome: totalIncome, totalExpense: totalExpense, balance: computeNetWorthIDR() };
+  }
+
+  /* ============================================================
+     MODAL LOGIC (Tambah/Edit Transaksi)
+  ============================================================ */
+  function populateCategorySelect(type){
+    el.inputCategory.innerHTML = CATEGORIES[type].map(function(cat){
+      return '<option value="' + cat + '">' + categoryLabel(cat) + '</option>';
+    }).join('');
+  }
+
+  function populateAccountSelectForCurrency(currency){
+    if(currency === 'LKR'){
+      el.inputAccount.innerHTML = '<option value="" disabled selected>Pilih aset LKR</option>' +
+        LKR_ACCOUNTS.map(function(acc){ return '<option value="' + acc + '">' + acc + '</option>'; }).join('');
+      el.customAccountWrap.style.display = 'none';
+    } else {
+      let html = '<option value="" disabled selected>Pilih sumber dana</option>';
+      html += '<optgroup label="Bank">' +
+        IDR_ACCOUNTS_DEFAULT.filter(function(a){ return !EWALLET_NAMES.includes(a); })
+          .map(function(a){ return '<option value="' + a + '">' + a + '</option>'; }).join('') +
+        '</optgroup>';
+      html += '<optgroup label="E-Wallet">' +
+        IDR_ACCOUNTS_DEFAULT.filter(function(a){ return EWALLET_NAMES.includes(a); })
+          .map(function(a){ return '<option value="' + a + '">' + a + '</option>'; }).join('') +
+        '</optgroup>';
+      html += '<option value="__custom__">Lainnya...</option>';
+      el.inputAccount.innerHTML = html;
+    }
+  }
+
+  function setTxCurrency(currency){
+    currentTxCurrency = currency;
+    el.txCurrencyToggle.querySelectorAll('button').forEach(function(btn){
+      btn.classList.toggle('is-active', btn.dataset.txCurrency === currency);
+    });
+    el.inputAmountPrefix.textContent = currency === 'LKR' ? 'Rs' : 'Rp';
+    populateAccountSelectForCurrency(currency);
+    el.customAccountWrap.style.display = 'none';
+    el.inputAccountCustom.value = '';
+  }
+
+  el.txCurrencyToggle.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){ setTxCurrency(btn.dataset.txCurrency); });
+  });
+
+  function setType(type){
+    currentType = type;
+    el.btnTypeIncome.classList.toggle('is-active-income', type === 'income');
+    el.btnTypeExpense.classList.toggle('is-active-expense', type === 'expense');
+    el.btnTypeExchange.classList.toggle('is-active-exchange', type === 'exchange');
+
+    if(type === 'exchange'){
+      el.formIncomeExpense.style.display = 'none';
+      el.formExchange.style.display = 'block';
+      el.btnSubmit.querySelector('span').textContent = editingId ? 'Simpan Perubahan' : 'Simpan Tukar Kurs';
+      populateExchangeAccountSelects();
+      updateExchangePreview();
+    } else {
+      el.formIncomeExpense.style.display = 'block';
+      el.formExchange.style.display = 'none';
+      populateCategorySelect(type);
+      el.btnSubmit.querySelector('span').textContent = editingId ? 'Simpan Perubahan' : 'Simpan Transaksi';
+    }
+  }
+
+  function setAccountField(accountName, currency){
+    if(!accountName){
+      el.inputAccount.value = '';
+      el.customAccountWrap.style.display = 'none';
+      el.inputAccountCustom.value = '';
+      return;
+    }
+    const optionValues = Array.prototype.map.call(el.inputAccount.options, function(o){ return o.value; });
+    if(optionValues.indexOf(accountName) > -1){
+      el.inputAccount.value = accountName;
+      el.customAccountWrap.style.display = 'none';
+      el.inputAccountCustom.value = '';
+    } else if(currency === 'IDR'){
+      el.inputAccount.value = '__custom__';
+      el.customAccountWrap.style.display = 'block';
+      el.inputAccountCustom.value = accountName;
+    }
+  }
+
+  el.inputAccount.addEventListener('change', function(){
+    const isCustom = this.value === '__custom__';
+    el.customAccountWrap.style.display = isCustom ? 'block' : 'none';
+    if(isCustom) el.inputAccountCustom.focus();
+  });
+
+  /* ---------- Tukar Kurs: populate & preview ---------- */
+  function allAccountsWithCurrency(){
+    const idrList = getIdrAccountList();
+    const list = idrList.map(function(a){ return { name: a, currency: 'IDR' }; });
+    LKR_ACCOUNTS.forEach(function(a){ list.push({ name: a, currency: 'LKR' }); });
+    return list;
+  }
+
+  function populateExchangeAccountSelects(){
+    const list = allAccountsWithCurrency();
+    function buildOptions(){
+      return list.map(function(a){
+        return '<option value="' + a.name + '" data-currency="' + a.currency + '">' + a.name + ' (' + a.currency + ')</option>';
+      }).join('');
+    }
+    const prevFrom = el.inputExFromAccount.value;
+    const prevTo = el.inputExToAccount.value;
+    el.inputExFromAccount.innerHTML = '<option value="" disabled ' + (prevFrom ? '' : 'selected') + '>Pilih akun asal</option>' + buildOptions();
+    el.inputExToAccount.innerHTML = '<option value="" disabled ' + (prevTo ? '' : 'selected') + '>Pilih akun tujuan</option>' + buildOptions();
+    if(prevFrom) el.inputExFromAccount.value = prevFrom;
+    if(prevTo) el.inputExToAccount.value = prevTo;
+    updateExchangeCurrencyUI();
+  }
+
+  function getSelectedAccountCurrency(selectEl){
+    const opt = selectEl.options[selectEl.selectedIndex];
+    return opt ? opt.dataset.currency : null;
+  }
+
+  function updateExchangeCurrencyUI(){
+    const fromCur = getSelectedAccountCurrency(el.inputExFromAccount);
+    el.inputExAmountPrefix.textContent = fromCur === 'LKR' ? 'Rs' : 'Rp';
+
+    const toCur = getSelectedAccountCurrency(el.inputExToAccount);
+    const sameCurrency = fromCur && toCur && fromCur === toCur;
+    el.fieldExRate.style.display = sameCurrency ? 'none' : 'block';
+  }
+
+  function computeExchangeReceived(amountSent, rate, fromCur, toCur){
+    if(!fromCur || !toCur) return 0;
+    if(fromCur === toCur) return amountSent;
+    if(fromCur === 'LKR' && toCur === 'IDR') return amountSent * rate;
+    if(fromCur === 'IDR' && toCur === 'LKR') return rate > 0 ? (amountSent / rate) : 0;
+    return 0;
+  }
+
+  function updateExchangePreview(){
+    const fromCur = getSelectedAccountCurrency(el.inputExFromAccount);
+    const toCur = getSelectedAccountCurrency(el.inputExToAccount);
+    const amountSent = parseAmountInput(el.inputExAmount.value);
+    const rate = parseRateInput(el.inputExRate.value) || 0;
+    const received = computeExchangeReceived(amountSent, rate, fromCur, toCur);
+
+    el.exPreviewSent.textContent = fmtByCurrency(amountSent, fromCur || 'IDR');
+    el.exPreviewReceived.textContent = fmtByCurrency(received, toCur || 'IDR');
+  }
+
+  el.inputExFromAccount.addEventListener('change', function(){ updateExchangeCurrencyUI(); updateExchangePreview(); });
+  el.inputExToAccount.addEventListener('change', function(){ updateExchangeCurrencyUI(); updateExchangePreview(); });
+  el.inputExAmount.addEventListener('input', function(){
+    const caretFromEnd = this.value.length - this.selectionStart;
+    this.value = formatAmountInput(this.value);
+    const pos = this.value.length - caretFromEnd;
+    this.setSelectionRange(pos, pos);
+    updateExchangePreview();
+  });
+  el.inputExRate.addEventListener('input', updateExchangePreview);
+
+  function clearErrors(){
+    [el.inputName, el.inputAmount, el.inputAccount, el.inputAccountCustom].forEach(function(node){ node.classList.remove('has-error'); });
+    [el.errorName, el.errorAmount, el.errorAccount, el.errorAccountCustom].forEach(function(node){ node.classList.remove('is-visible'); });
+    [el.inputExFromAccount, el.inputExToAccount, el.inputExAmount, el.inputExRate].forEach(function(node){ node.classList.remove('has-error'); });
+    [el.errorExFrom, el.errorExTo, el.errorExAmount, el.errorExRate].forEach(function(node){ node.classList.remove('is-visible'); });
+  }
+
+  function openModal(mode, tx){
+    clearErrors();
+    if(mode === 'edit' && tx){
+      editingId = tx.id;
+      el.modalTitle.textContent = 'Edit Transaksi';
+
+      if(tx.type === 'exchange'){
+        setType('exchange');
+        populateExchangeAccountSelects();
+        el.inputExFromAccount.value = tx.fromAccount;
+        el.inputExToAccount.value = tx.toAccount;
+        el.inputExAmount.value = formatAmountInput(String(tx.amountSent));
+        el.inputExRate.value = tx.rate;
+        el.inputExDate.value = tx.date;
+        updateExchangeCurrencyUI();
+        updateExchangePreview();
+      } else {
+        setType(tx.type);
+        setTxCurrency(tx.currency || 'IDR');
+        el.inputName.value = tx.name;
+        el.inputAmount.value = formatAmountInput(String(tx.amount));
+        el.inputCategory.value = tx.category;
+        setAccountField(tx.account || '', tx.currency || 'IDR');
+        el.inputDate.value = tx.date;
+      }
+      el.btnSubmit.querySelector('span').textContent = 'Simpan Perubahan';
+    } else {
+      editingId = null;
+      el.modalTitle.textContent = 'Tambah Transaksi';
+      setType('income');
+      setTxCurrency('IDR');
+      el.inputName.value = '';
+      el.inputAmount.value = '';
+      setAccountField('', 'IDR');
+      el.inputDate.value = new Date().toISOString().slice(0, 10);
+
+      populateExchangeAccountSelects();
+      el.inputExAmount.value = '';
+      el.inputExRate.value = '54';
+      el.inputExDate.value = new Date().toISOString().slice(0, 10);
+      updateExchangePreview();
+
+      el.btnSubmit.querySelector('span').textContent = 'Simpan Transaksi';
+    }
+    el.modalOverlay.classList.add('is-open');
+    setTimeout(function(){
+      if(currentType === 'exchange') el.inputExAmount.focus(); else el.inputName.focus();
+    }, 50);
+  }
+
+  function closeModal(){ el.modalOverlay.classList.remove('is-open'); }
+
+  el.btnOpenAdd.addEventListener('click', function(){ openModal('add'); });
+  el.btnCloseModal.addEventListener('click', closeModal);
+  el.btnCancelModal.addEventListener('click', closeModal);
+  el.modalOverlay.addEventListener('click', function(e){ if(e.target === el.modalOverlay) closeModal(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && el.modalOverlay.classList.contains('is-open')) closeModal();
+    if(e.key === 'Escape' && el.goalModalOverlay.classList.contains('is-open')) closeGoalModal();
+  });
+
+  el.btnTypeIncome.addEventListener('click', function(){ setType('income'); });
+  el.btnTypeExpense.addEventListener('click', function(){ setType('expense'); });
+  el.btnTypeExchange.addEventListener('click', function(){ setType('exchange'); });
+
+  el.inputAmount.addEventListener('input', function(){
+    const caretFromEnd = this.value.length - this.selectionStart;
+    this.value = formatAmountInput(this.value);
+    const pos = this.value.length - caretFromEnd;
+    this.setSelectionRange(pos, pos);
+  });
+
+  /* ============================================================
+     FORM SUBMIT (VALIDATION)
+  ============================================================ */
+  el.txForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    clearErrors();
+
+    if(currentType === 'exchange'){
+      let valid = true;
+      const fromAccount = el.inputExFromAccount.value;
+      const toAccount = el.inputExToAccount.value;
+      const amountSent = parseAmountInput(el.inputExAmount.value);
+      const rate = parseRateInput(el.inputExRate.value);
+      const fromCur = getSelectedAccountCurrency(el.inputExFromAccount);
+      const toCur = getSelectedAccountCurrency(el.inputExToAccount);
+
+      if(!fromAccount){ el.inputExFromAccount.classList.add('has-error'); el.errorExFrom.classList.add('is-visible'); valid = false; }
+      if(!toAccount || toAccount === fromAccount){ el.inputExToAccount.classList.add('has-error'); el.errorExTo.classList.add('is-visible'); valid = false; }
+      if(amountSent <= 0){ el.inputExAmount.classList.add('has-error'); el.errorExAmount.classList.add('is-visible'); valid = false; }
+      if(fromCur !== toCur && rate <= 0){ el.inputExRate.classList.add('has-error'); el.errorExRate.classList.add('is-visible'); valid = false; }
+      if(!valid) return;
+
+      const amountReceived = computeExchangeReceived(amountSent, rate, fromCur, toCur);
+
+      const payload = {
+        id: editingId || uid(),
+        type: 'exchange',
+        fromAccount: fromAccount,
+        fromCurrency: fromCur,
+        toAccount: toAccount,
+        toCurrency: toCur,
+        amountSent: amountSent,
+        rate: rate,
+        amountReceived: amountReceived,
+        date: el.inputExDate.value || new Date().toISOString().slice(0, 10)
+      };
+
+      if(editingId){
+        const idx = transactions.findIndex(function(t){ return t.id === editingId; });
+        if(idx > -1) transactions[idx] = payload;
+        if(settings.notif) showToast('Tukar kurs berhasil diperbarui');
+      } else {
+        transactions.unshift(payload);
+        if(settings.notif) showToast('Tukar kurs berhasil dicatat');
+      }
+
+      saveTransactions();
+      renderCurrentPage();
+      closeModal();
+      return;
+    }
+
+    let valid = true;
+    const name = el.inputName.value.trim();
+    const amount = parseAmountInput(el.inputAmount.value);
+    const accountSelectVal = el.inputAccount.value;
+    const isCustomAccount = accountSelectVal === '__custom__';
+    const accountName = isCustomAccount ? el.inputAccountCustom.value.trim() : accountSelectVal;
+
+    if(!name){
+      el.inputName.classList.add('has-error');
+      el.errorName.classList.add('is-visible');
+      el.inputName.closest('.field').classList.add('shake');
+      valid = false;
+    }
+    if(amount <= 0){
+      el.inputAmount.classList.add('has-error');
+      el.errorAmount.classList.add('is-visible');
+      el.inputAmount.closest('.field').classList.add('shake');
+      valid = false;
+    }
+    if(!accountSelectVal){
+      el.inputAccount.classList.add('has-error');
+      el.errorAccount.classList.add('is-visible');
+      valid = false;
+    } else if(isCustomAccount && !accountName){
+      el.inputAccountCustom.classList.add('has-error');
+      el.errorAccountCustom.classList.add('is-visible');
+      valid = false;
+    }
+    if(!valid){
+      setTimeout(function(){
+        document.querySelectorAll('.shake').forEach(function(node){ node.classList.remove('shake'); });
+      }, 400);
+      return;
+    }
+
+    const payload = {
+      id: editingId || uid(),
+      name: name,
+      amount: amount,
+      currency: currentTxCurrency,
+      type: currentType,
+      category: el.inputCategory.value,
+      account: accountName,
+      date: el.inputDate.value || new Date().toISOString().slice(0, 10)
+    };
+
+    if(editingId){
+      const idx = transactions.findIndex(function(t){ return t.id === editingId; });
+      if(idx > -1) transactions[idx] = payload;
+      if(settings.notif) showToast('Transaksi berhasil diperbarui');
+    } else {
+      transactions.unshift(payload);
+      if(settings.notif) showToast('Transaksi berhasil ditambahkan');
+    }
+
+    saveTransactions();
+    renderCurrentPage();
+    closeModal();
+  });
+
+  /* ============================================================
+     DELETE (INLINE CONFIRM) — Transaksi
+  ============================================================ */
+  function requestDelete(id){ pendingDeleteId = id; renderTransactionList(); }
+  function cancelDelete(){ pendingDeleteId = null; renderTransactionList(); }
+  function confirmDelete(id){
+    transactions = transactions.filter(function(t){ return t.id !== id; });
+    pendingDeleteId = null;
+    saveTransactions();
+    renderCurrentPage();
+    if(settings.notif) showToast('Transaksi berhasil dihapus');
+  }
+
+  /* ============================================================
+     TOAST
+  ============================================================ */
+  function showToast(message){
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span></span>';
+    toast.querySelector('span').textContent = message;
+    el.toastStack.appendChild(toast);
+    setTimeout(function(){
+      toast.classList.add('is-leaving');
+      setTimeout(function(){ toast.remove(); }, 250);
+    }, 2600);
+  }
+
+  /* ============================================================
+     FILTERS (Dashboard history)
+  ============================================================ */
+  function populateFilterCategories(){
+    const allCats = CATEGORIES.income.concat(CATEGORIES.expense);
+    const current = el.filterCategory.value;
+    el.filterCategory.innerHTML = '<option value="all">Semua Kategori</option>' +
+      allCats.map(function(cat){ return '<option value="' + cat + '">' + categoryLabel(cat) + '</option>'; }).join('');
+    el.filterCategory.value = current || 'all';
+  }
+
+  el.filterType.addEventListener('change', renderTransactionList);
+  el.filterCategory.addEventListener('change', renderTransactionList);
+
+  function getFilteredTransactions(){
+    const type = el.filterType.value;
+    const cat = el.filterCategory.value;
+    return transactions.filter(function(t){
+      if(type !== 'all' && t.type !== type) return false;
+      if(cat !== 'all'){
+        if(t.type === 'exchange') return false;
+        if(t.category !== cat) return false;
+      }
+      return true;
+    });
+  }
+
+  /* ============================================================
+     RENDER: TRANSACTION LIST (Dashboard)
+  ============================================================ */
+  function renderTransactionList(){
+    const list = getFilteredTransactions().slice().sort(function(a, b){
+      return new Date(b.date) - new Date(a.date);
+    });
+
+    if(transactions.length === 0){
+      el.transactionList.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M8 15h3"/></svg></div>' +
+          '<div class="empty-state-title">Belum ada transaksi</div>' +
+          '<div class="empty-state-sub">Mulai catat pemasukan dan pengeluaran kamu dengan menekan tombol Tambah Transaksi.</div>' +
+        '</div>';
+      return;
+    }
+
+    if(list.length === 0){
+      el.transactionList.innerHTML =
+        '<div class="empty-state">' +
+          '<div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>' +
+          '<div class="empty-state-title">Tidak ada hasil</div>' +
+          '<div class="empty-state-sub">Tidak ada transaksi yang cocok dengan filter ini.</div>' +
+        '</div>';
+      return;
+    }
+
+    el.transactionList.innerHTML = list.map(function(t){
+      if(t.type === 'exchange'){
+        if(pendingDeleteId === t.id){
+          return (
+            '<div class="transaction-row">' +
+              '<div class="tx-icon tx-icon--exchange">' + ICON_EXCHANGE + '</div>' +
+              '<div class="tx-info">' +
+                '<div class="tx-name">Tukar Kurs: ' + escapeHtml(t.fromAccount) + ' &rarr; ' + escapeHtml(t.toAccount) + '</div>' +
+                '<div class="tx-meta">Kurs ' + t.rate + ' &middot; ' + formatDateDisplay(t.date) + '</div>' +
+              '</div>' +
+              '<div class="confirm-inline">Hapus?' +
+                '<button type="button" class="confirm-yes" data-confirm-yes="' + t.id + '">Ya</button>' +
+                '<button type="button" class="confirm-no" data-confirm-no="1">Batal</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+        return (
+          '<div class="transaction-row">' +
+            '<div class="tx-icon tx-icon--exchange">' + ICON_EXCHANGE + '</div>' +
+            '<div class="tx-info">' +
+              '<div class="tx-name">Tukar Kurs: ' + escapeHtml(t.fromAccount) + ' &rarr; ' + escapeHtml(t.toAccount) + '</div>' +
+              '<div class="tx-meta">Kurs ' + t.rate + ' &middot; ' + formatDateDisplay(t.date) + '</div>' +
+            '</div>' +
+            '<div class="tx-amount tx-amount--exchange">' + fmtByCurrency(t.amountSent, t.fromCurrency) + ' &rarr; ' + fmtByCurrency(t.amountReceived, t.toCurrency) + '</div>' +
+            '<div class="tx-actions">' +
+              '<button type="button" class="icon-btn" data-edit="' + t.id + '" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>' +
+              '<button type="button" class="icon-btn icon-btn--danger" data-delete="' + t.id + '" aria-label="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+            '</div>' +
+          '</div>'
+        );
+      }
+
+      const isIncome = t.type === 'income';
+      const sign = isIncome ? '+' : '-';
+      const accountMeta = t.account ? (' &middot; ' + escapeHtml(t.account)) : '';
+      const currencyTag = t.currency === 'LKR' ? ' &middot; LKR' : '';
+
+      if(pendingDeleteId === t.id){
+        return (
+          '<div class="transaction-row">' +
+            '<div class="tx-icon ' + (isIncome ? 'tx-icon--income' : 'tx-icon--expense') + '">' + categoryIcon(t.category) + '</div>' +
+            '<div class="tx-info">' +
+              '<div class="tx-name">' + escapeHtml(t.name) + '</div>' +
+              '<div class="tx-meta">' + categoryLabel(t.category) + ' &middot; ' + formatDateDisplay(t.date) + accountMeta + currencyTag + '</div>' +
+            '</div>' +
+            '<div class="confirm-inline">Hapus?' +
+              '<button type="button" class="confirm-yes" data-confirm-yes="' + t.id + '">Ya</button>' +
+              '<button type="button" class="confirm-no" data-confirm-no="1">Batal</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }
+
+      return (
+        '<div class="transaction-row">' +
+          '<div class="tx-icon ' + (isIncome ? 'tx-icon--income' : 'tx-icon--expense') + '">' + categoryIcon(t.category) + '</div>' +
+          '<div class="tx-info">' +
+            '<div class="tx-name">' + escapeHtml(t.name) + '</div>' +
+            '<div class="tx-meta">' + categoryLabel(t.category) + ' &middot; ' + formatDateDisplay(t.date) + accountMeta + currencyTag + '</div>' +
+          '</div>' +
+          '<div class="tx-amount ' + (isIncome ? 'tx-amount--income' : 'tx-amount--expense') + '">' + sign + ' ' + fmtByCurrency(t.amount, t.currency || 'IDR') + '</div>' +
+          '<div class="tx-actions">' +
+            '<button type="button" class="icon-btn" data-edit="' + t.id + '" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>' +
+            '<button type="button" class="icon-btn icon-btn--danger" data-delete="' + t.id + '" aria-label="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    el.transactionList.querySelectorAll('[data-edit]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const tx = transactions.find(function(t){ return t.id === btn.dataset.edit; });
+        if(tx) openModal('edit', tx);
+      });
+    });
+    el.transactionList.querySelectorAll('[data-delete]').forEach(function(btn){
+      btn.addEventListener('click', function(){ requestDelete(btn.dataset.delete); });
+    });
+    el.transactionList.querySelectorAll('[data-confirm-yes]').forEach(function(btn){
+      btn.addEventListener('click', function(){ confirmDelete(btn.dataset.confirmYes); });
+    });
+    el.transactionList.querySelectorAll('[data-confirm-no]').forEach(function(btn){
+      btn.addEventListener('click', cancelDelete);
+    });
+  }
+
+  /* ============================================================
+     RENDER: DASHBOARD PAGE
+  ============================================================ */
+  function renderStats(totals){
+    el.statBalance.textContent = settings.hideBalance ? '••••••' : formatConvertedNumber(totals.balance);
+    el.statIncome.textContent = formatConvertedNumber(totals.totalIncome);
+    el.statExpense.textContent = formatConvertedNumber(totals.totalExpense);
+    el.legendIncome.textContent = fmtMoney(totals.totalIncome);
+    el.legendExpense.textContent = fmtMoney(totals.totalExpense);
+
+    const total = totals.totalIncome + totals.totalExpense;
+    const incomePct = total > 0 ? (totals.totalIncome / total) * 100 : 50;
+    const expensePct = total > 0 ? (totals.totalExpense / total) * 100 : 50;
+    el.ratioIncome.style.width = incomePct + '%';
+    el.ratioExpense.style.width = expensePct + '%';
+  }
+
+  function renderCategoryBreakdown(){
+    const totals = computeCategoryTotals('expense');
+    const keys = Object.keys(totals);
+
+    if(keys.length === 0){
+      el.categoryList.innerHTML = '<div class="empty-mini">Belum ada data pengeluaran</div>';
+      return;
+    }
+
+    const sorted = keys.map(function(cat){ return { category: cat, amount: totals[cat] }; })
+      .sort(function(a, b){ return b.amount - a.amount; }).slice(0, 5);
+    const max = sorted[0].amount;
+
+    el.categoryList.innerHTML = sorted.map(function(item){
+      const pct = Math.max(6, Math.round((item.amount / max) * 100));
+      return (
+        '<div class="category-row">' +
+          '<div class="category-row-top">' +
+            '<div class="category-row-name">' +
+              '<div class="category-row-icon">' + categoryIcon(item.category) + '</div>' +
+              categoryLabel(item.category) +
+            '</div>' +
+            '<div class="category-row-amount">' + fmtMoney(item.amount) + '</div>' +
+          '</div>' +
+          '<div class="category-bar-track"><div class="category-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function renderAccountChips(gridEl, accountNames, currency, emptyText){
+    if(accountNames.length === 0){
+      gridEl.innerHTML = '<div class="empty-mini">' + emptyText + '</div>';
+      return;
+    }
+    const map = computeAccountBalances();
+    gridEl.innerHTML = accountNames.map(function(acc){
+      const bal = map[acc] || 0;
+      const cls = bal < 0 ? 'is-negative' : 'is-positive';
+      return (
+        '<div class="account-chip">' +
+          '<div class="account-chip-name"><span class="account-chip-icon">' + accountIcon(acc) + '</span>' + escapeHtml(acc) + '</div>' +
+          '<div class="account-chip-balance ' + cls + '">' + fmtByCurrency(bal, currency) + '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function renderAccountsWidget(){
+    // Ringkasan cepat di Dashboard: gabungkan akun yang punya transaksi saja, format nominal asli
+    const map = computeAccountBalances();
+    const keys = Object.keys(map).filter(function(k){ return k !== 'Tanpa Akun'; });
+
+    if(keys.length === 0){
+      el.accountsGrid.innerHTML = '<div class="empty-mini">Belum ada transaksi dengan sumber dana tercatat</div>';
+      return;
+    }
+
+    keys.sort(function(a, b){ return Math.abs(map[b]) - Math.abs(map[a]); });
+
+    el.accountsGrid.innerHTML = keys.map(function(acc){
+      const bal = map[acc];
+      const cur = accountCurrency(acc);
+      const cls = bal < 0 ? 'is-negative' : 'is-positive';
+      return (
+        '<div class="account-chip">' +
+          '<div class="account-chip-name"><span class="account-chip-icon">' + accountIcon(acc) + '</span>' + escapeHtml(acc) + '</div>' +
+          '<div class="account-chip-balance ' + cls + '">' + fmtByCurrency(bal, cur) + '</div>' +
+          '<div class="account-chip-tag">' + cur + '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function renderMainChart(totals){
+    if(typeof Chart === 'undefined'){
+      const box = document.querySelector('#page-dashboard .chart-canvas-box');
+      if(box) box.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text-tertiary);text-align:center;padding:8px;">Grafik tidak dapat dimuat</div>';
+      return;
+    }
+    try{
+      const data = {
+        labels: ['Pemasukan', 'Pengeluaran'],
+        datasets: [{ data: [totals.totalIncome, totals.totalExpense], backgroundColor: ['#0E8F6E', '#E0736A'], borderWidth: 0, hoverOffset: 4 }]
+      };
+      if(mainChartInstance){ mainChartInstance.data = data; mainChartInstance.update(); return; }
+
+      const ctx = document.getElementById('mainChart').getContext('2d');
+      mainChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: {
+          cutout: '72%', responsive: true, maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#161A18', padding: 10, cornerRadius: 8,
+              titleFont: { family: 'Plus Jakarta Sans', weight: '600', size: 12 },
+              bodyFont: { family: 'IBM Plex Mono', size: 12 },
+              callbacks: { label: function(ctx){ return ' ' + fmtMoney(Number(ctx.raw)); } }
+            }
+          },
+          animation: { duration: 500, easing: 'easeOutQuart' }
+        }
+      });
+    }catch(err){ console.warn('Chart render skipped:', err); }
+  }
+
+  function renderDashboard(){
+    const totals = computeTotals();
+    renderStats(totals);
+    renderCategoryBreakdown();
+    renderAccountsWidget();
+    renderMainChart(totals);
+    populateFilterCategories();
+    renderTransactionList();
+  }
+
+  /* ============================================================
+     RENDER: REKENING & E-WALLET PAGE
+  ============================================================ */
+  function renderRekeningPage(){
+    const netWorth = computeNetWorthIDR();
+    el.rekeningNetWorth.textContent = formatConvertedNumber(netWorth);
+
+    renderAccountChips(el.idrAccountsGrid, getIdrAccountList(), 'IDR', 'Belum ada akun IDR');
+    renderAccountChips(el.lkrAccountsGrid, LKR_ACCOUNTS.slice(), 'LKR', 'Belum ada akun LKR');
+  }
+
+  /* ============================================================
+     RENDER: LAPORAN & ANALITIK PAGE
+  ============================================================ */
+  function renderReportPage(){
+    const totals = computeTotals();
+    el.reportLegendIncome.textContent = fmtMoney(totals.totalIncome);
+    el.reportLegendExpense.textContent = fmtMoney(totals.totalExpense);
+    el.reportLegendBalance.textContent = fmtMoney(totals.totalIncome - totals.totalExpense);
+
+    if(typeof Chart !== 'undefined'){
+      try{
+        const data = {
+          labels: ['Pemasukan', 'Pengeluaran'],
+          datasets: [{ data: [totals.totalIncome, totals.totalExpense], backgroundColor: ['#0E8F6E', '#E0736A'], borderWidth: 0, hoverOffset: 4 }]
+        };
+        if(reportChartInstance){ reportChartInstance.data = data; reportChartInstance.update(); }
+        else{
+          const ctx = document.getElementById('reportChart').getContext('2d');
+          reportChartInstance = new Chart(ctx, {
+            type: 'doughnut', data: data,
+            options: {
+              cutout: '70%', responsive: true, maintainAspectRatio: true,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx){ return ' ' + fmtMoney(Number(ctx.raw)); } } } },
+              animation: { duration: 500, easing: 'easeOutQuart' }
+            }
+          });
+        }
+      }catch(err){ console.warn('Report chart skipped:', err); }
+    }
+
+    const catTotals = computeCategoryTotals('expense');
+    const keys = Object.keys(catTotals);
+    if(keys.length === 0){
+      el.reportCategoryList.innerHTML = '<div class="empty-mini">Belum ada data pengeluaran</div>';
+    } else {
+      const sorted = keys.map(function(cat){ return { category: cat, amount: catTotals[cat] }; })
+        .sort(function(a, b){ return b.amount - a.amount; });
+      const max = sorted[0].amount;
+      el.reportCategoryList.innerHTML = sorted.map(function(item){
+        const pct = Math.max(6, Math.round((item.amount / max) * 100));
+        return (
+          '<div class="category-row">' +
+            '<div class="category-row-top">' +
+              '<div class="category-row-name"><div class="category-row-icon">' + categoryIcon(item.category) + '</div>' + categoryLabel(item.category) + '</div>' +
+              '<div class="category-row-amount">' + fmtMoney(item.amount) + '</div>' +
+            '</div>' +
+            '<div class="category-bar-track"><div class="category-bar-fill" style="width:' + pct + '%"></div></div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+
+    if(typeof Chart !== 'undefined'){
+      try{
+        const labels = keys.map(categoryLabel);
+        const values = keys.map(function(k){ return catTotals[k]; });
+        const barData = {
+          labels: labels.length ? labels : ['Belum ada data'],
+          datasets: [{ data: labels.length ? values : [0], backgroundColor: '#0E8F6E', borderRadius: 8, maxBarThickness: 40 }]
+        };
+        if(reportBarChartInstance){ reportBarChartInstance.data = barData; reportBarChartInstance.update(); }
+        else{
+          const ctx2 = document.getElementById('reportBarChart').getContext('2d');
+          reportBarChartInstance = new Chart(ctx2, {
+            type: 'bar', data: barData,
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx){ return ' ' + fmtMoney(Number(ctx.raw)); } } } },
+              scales: {
+                y: { beginAtZero: true, grid: { color: '#F0F1EE' }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11 }, color: '#A0A69F', callback: function(v){ return fmtMoney(v); } } },
+                x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#6B726D' } }
+              }
+            }
+          });
+        }
+      }catch(err){ console.warn('Report bar chart skipped:', err); }
+    }
+  }
+
+  /* ============================================================
+     RENDER: MANAJEMEN ANGGARAN PAGE
+     (Nominal batas anggaran tetap dalam basis IDR;
+      angka "terpakai" adalah gabungan IDR-equivalent yang mengikuti toggle mata uang)
+  ============================================================ */
+  function renderBudgetPage(){
+    const catTotals = computeCategoryTotals('expense');
+
+    el.budgetGrid.innerHTML = CATEGORIES.expense.map(function(cat){
+      const spent = catTotals[cat] || 0;
+      const budget = budgets[cat] || 0;
+      const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+      const isOver = budget > 0 && spent > budget;
+
+      return (
+        '<div class="budget-card">' +
+          '<div class="budget-card-top">' +
+            '<div class="budget-cat-name"><div class="budget-cat-icon">' + categoryIcon(cat) + '</div>' + categoryLabel(cat) + '</div>' +
+          '</div>' +
+          '<div class="budget-input-row">' +
+            '<span class="field-prefix">Rp</span>' +
+            '<input type="text" inputmode="numeric" class="budget-input" data-budget-cat="' + cat + '" placeholder="Atur batas anggaran" value="' + (budget ? formatAmountInput(String(budget)) : '') + '">' +
+          '</div>' +
+          '<div class="budget-progress-track"><div class="budget-progress-fill ' + (isOver ? 'is-over' : '') + '" style="width:' + pct + '%"></div></div>' +
+          '<div class="budget-meta-row">' +
+            '<span>Terpakai ' + fmtMoney(spent) + '</span>' +
+            '<span class="' + (isOver ? 'is-over-text' : '') + '">' + (budget > 0 ? (isOver ? 'Melebihi anggaran' : pct + '% terpakai') : 'Belum diatur') + '</span>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    el.budgetGrid.querySelectorAll('[data-budget-cat]').forEach(function(input){
+      input.addEventListener('input', function(){
+        this.value = formatAmountInput(this.value);
+      });
+      input.addEventListener('change', function(){
+        const cat = this.dataset.budgetCat;
+        const val = parseAmountInput(this.value);
+        if(val > 0) budgets[cat] = val; else delete budgets[cat];
+        saveBudgets();
+        renderBudgetPage();
+        if(settings.notif) showToast('Anggaran ' + categoryLabel(cat) + ' disimpan');
+      });
+    });
+  }
+
+  /* ============================================================
+     RENDER: MANAJEMEN INVESTASI PAGE
+  ============================================================ */
+  function populateInvestSuggestions(cat){
+    const dl = document.getElementById('investInstrumentSuggestions');
+    dl.innerHTML = (INVESTMENT_INSTRUMENTS[cat] || []).map(function(name){
+      return '<option value="' + name + '">';
+    }).join('');
+  }
+
+  const investCategorySelect = document.getElementById('investCategory');
+  investCategorySelect.addEventListener('change', function(){ populateInvestSuggestions(this.value); });
+
+  const investPriceInput = document.getElementById('investPrice');
+  investPriceInput.addEventListener('input', function(){
+    const caretFromEnd = this.value.length - this.selectionStart;
+    this.value = formatAmountInput(this.value);
+    const pos = this.value.length - caretFromEnd;
+    this.setSelectionRange(pos, pos);
+  });
+
+  document.getElementById('investForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const instrEl = document.getElementById('investInstrument');
+    const qtyEl = document.getElementById('investQty');
+    const priceEl = document.getElementById('investPrice');
+    const errInstr = document.getElementById('errorInvestInstrument');
+    const errQty = document.getElementById('errorInvestQty');
+    const errPrice = document.getElementById('errorInvestPrice');
+
+    instrEl.classList.remove('has-error'); errInstr.classList.remove('is-visible');
+    qtyEl.classList.remove('has-error'); errQty.classList.remove('is-visible');
+    priceEl.classList.remove('has-error'); errPrice.classList.remove('is-visible');
+
+    let valid = true;
+    const name = instrEl.value.trim();
+    const qty = parseQtyInput(qtyEl.value);
+    const price = parseAmountInput(priceEl.value);
+
+    if(!name){ instrEl.classList.add('has-error'); errInstr.classList.add('is-visible'); valid = false; }
+    if(qty <= 0){ qtyEl.classList.add('has-error'); errQty.classList.add('is-visible'); valid = false; }
+    if(price <= 0){ priceEl.classList.add('has-error'); errPrice.classList.add('is-visible'); valid = false; }
+    if(!valid) return;
+
+    const dateEl = document.getElementById('investDate');
+
+    investments.unshift({
+      id: uid(),
+      category: investCategorySelect.value,
+      instrument: name,
+      quantity: qty,
+      price: price,
+      date: dateEl.value || new Date().toISOString().slice(0, 10)
+    });
+    saveInvestments();
+
+    this.reset();
+    dateEl.value = new Date().toISOString().slice(0, 10);
+    populateInvestSuggestions(investCategorySelect.value);
+
+    renderInvestmentPage();
+    if(settings.notif) showToast('Investasi berhasil dicatat');
+  });
+
+  document.querySelectorAll('[data-accordion-toggle]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const cat = btn.dataset.accordionToggle;
+      const accEl = document.getElementById('accordion-' + cat);
+      const bodyEl = document.getElementById('body-' + cat);
+      const isOpen = accEl.classList.contains('is-open');
+      if(isOpen){
+        bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+        requestAnimationFrame(function(){ bodyEl.style.maxHeight = '0px'; });
+        accEl.classList.remove('is-open');
+      } else {
+        accEl.classList.add('is-open');
+        bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+      }
+    });
+  });
+
+  function formatQty(qty){
+    return Number(qty).toLocaleString('id-ID', { maximumFractionDigits: 4 });
+  }
+
+  function renderInvestmentPage(){
+    const groups = { 'pasar-modal': [], 'perbankan': [], 'logam-mulia': [] };
+    investments.forEach(function(inv){ if(groups[inv.category]) groups[inv.category].push(inv); });
+
+    ACCORDION_CATS.forEach(function(catKey){
+      const items = groups[catKey].slice().sort(function(a, b){ return new Date(b.date) - new Date(a.date); });
+      document.getElementById('count-' + catKey).textContent = items.length;
+
+      const listEl = document.getElementById('investList-' + catKey);
+      listEl.innerHTML = items.length === 0
+        ? '<div class="empty-mini">Belum ada catatan investasi di kategori ini</div>'
+        : items.map(function(inv){
+            return (
+              '<div class="invest-row">' +
+                '<div><div class="invest-row-name">' + escapeHtml(inv.instrument) + '</div><div class="invest-row-date">' + formatDateDisplay(inv.date) + '</div></div>' +
+                '<div class="invest-row-mid"><div class="invest-row-qty">' + formatQty(inv.quantity) + ' unit</div></div>' +
+                '<div class="invest-row-right">' +
+                  '<div class="invest-row-price">Rp ' + formatRupiah(inv.price) + '</div>' +
+                  '<button type="button" class="icon-btn icon-btn--danger" data-invest-delete="' + inv.id + '" aria-label="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+                '</div>' +
+              '</div>'
+            );
+          }).join('');
+
+      listEl.querySelectorAll('[data-invest-delete]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          investments = investments.filter(function(i){ return i.id !== btn.dataset.investDelete; });
+          saveInvestments();
+          renderInvestmentPage();
+          if(settings.notif) showToast('Investasi berhasil dihapus');
+        });
+      });
+
+      // Jika accordion sedang terbuka, sesuaikan max-height agar konten baru tidak terpotong
+      const accEl = document.getElementById('accordion-' + catKey);
+      if(accEl.classList.contains('is-open')){
+        const bodyEl = document.getElementById('body-' + catKey);
+        bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+      }
+    });
+  }
+
+  /* ============================================================
+     TARGET & IMPIAN (GOALS) — LOGIC & RENDER
+  ============================================================ */
+  function formatGoalMonthLabel(monthStr){
+    if(!monthStr) return '-';
+    const parts = monthStr.split('-');
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    return (MONTHS_ID_FULL[m] || '') + ' ' + y;
+  }
+
+  function computeMonthsRemaining(targetMonthStr){
+    const now = new Date();
+    const parts = targetMonthStr.split('-');
+    const ty = parseInt(parts[0], 10);
+    const tm = parseInt(parts[1], 10);
+    const nowY = now.getFullYear();
+    const nowM = now.getMonth() + 1;
+    return (ty - nowY) * 12 + (tm - nowM);
+  }
+
+  function computeGoalStats(goal){
+    const combinedIDR = computeNetWorthIDR();
+    const targetIDR = toIDREquivalent(goal.targetAmount, goal.targetCurrency);
+    const shortfallIDR = Math.max(0, targetIDR - combinedIDR);
+    const achieved = targetIDR > 0 && combinedIDR >= targetIDR;
+    const progressPct = targetIDR > 0 ? Math.max(0, Math.min(100, (combinedIDR / targetIDR) * 100)) : 0;
+    const monthsRemainingRaw = computeMonthsRemaining(goal.targetMonth);
+    let perMonthIDR = 0;
+    let dueNote = '';
+    if(!achieved){
+      if(monthsRemainingRaw > 0){
+        perMonthIDR = shortfallIDR / monthsRemainingRaw;
+      } else {
+        perMonthIDR = shortfallIDR;
+        dueNote = 'Target waktu sudah tercapai / terlewat';
+      }
+    }
+    return {
+      combinedIDR: combinedIDR,
+      targetIDR: targetIDR,
+      shortfallIDR: shortfallIDR,
+      achieved: achieved,
+      progressPct: progressPct,
+      monthsRemaining: monthsRemainingRaw,
+      perMonthIDR: perMonthIDR,
+      dueNote: dueNote
+    };
+  }
+
+  function goalMotivationText(pct, achieved){
+    if(achieved) return 'Selamat! Kamu Berhasil! Impianmu kini jadi kenyataan! 🎉🥳';
+    if(pct <= 25) return 'Langkah awal yang hebat! Perjalanan seribu mil dimulai dari satu langkah kecil. 💪';
+    if(pct <= 50) return 'Mantap! Kamu sudah berjalan hampir setengah jalan. Pertahankan momentum! 🔥';
+    if(pct <= 75) return 'Keren banget! Target kamu sudah di depan mata, jangan kendur! 🚀';
+    return 'Sedikit lagi! Kamu membuktikan bahwa impianmu bukan sekadar angan-angan! 👑';
+  }
+
+  function renderGoalsPage(){
+    if(goals.length === 0){
+      el.goalsGrid.innerHTML =
+        '<div class="empty-state" style="grid-column:1/-1;">' +
+          '<div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></div>' +
+          '<div class="empty-state-title">Belum ada target</div>' +
+          '<div class="empty-state-sub">Buat target keuangan pertamamu dan pantau progresnya secara otomatis.</div>' +
+        '</div>';
+      return;
+    }
+
+    const sorted = goals.slice().sort(function(a, b){ return a.targetMonth.localeCompare(b.targetMonth); });
+
+    el.goalsGrid.innerHTML = sorted.map(function(goal){
+      const stats = computeGoalStats(goal);
+      const pctLabel = Math.round(stats.progressPct);
+
+      return (
+        '<div class="goal-card ' + (stats.achieved ? 'is-achieved' : '') + '">' +
+          '<div class="goal-card-top">' +
+            '<div>' +
+              '<div class="goal-card-name">' + escapeHtml(goal.name) + '</div>' +
+              '<div class="goal-card-due">Target: ' + formatGoalMonthLabel(goal.targetMonth) + '</div>' +
+            '</div>' +
+            '<div class="goal-card-actions">' +
+              '<button type="button" class="icon-btn" data-goal-edit="' + goal.id + '" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>' +
+              '<button type="button" class="icon-btn icon-btn--danger" data-goal-delete="' + goal.id + '" aria-label="Hapus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="goal-progress-wrap">' +
+            '<div class="goal-progress-toprow">' +
+              '<span class="goal-progress-pct ' + (stats.achieved ? 'is-achieved' : '') + '">' + pctLabel + '%</span>' +
+              '<span class="goal-progress-amounts">' + fmtMoney(stats.combinedIDR) + ' / ' + fmtMoney(stats.targetIDR) + '</span>' +
+            '</div>' +
+            '<div class="goal-progress-track"><div class="goal-progress-fill ' + (stats.achieved ? 'is-achieved' : '') + '" style="width:' + pctLabel + '%"></div></div>' +
+          '</div>' +
+
+          '<div class="goal-stats-row">' +
+            '<div class="goal-stat-box">' +
+              '<div class="goal-stat-label">Kekurangan</div>' +
+              '<div class="goal-stat-value ' + (stats.achieved ? '' : 'is-rose') + '">' + (stats.achieved ? 'Rp 0' : fmtMoney(stats.shortfallIDR)) + '</div>' +
+            '</div>' +
+            '<div class="goal-stat-box">' +
+              '<div class="goal-stat-label">Wajib Menabung/Bulan</div>' +
+              '<div class="goal-stat-value">' + (stats.achieved ? '&mdash;' : fmtMoney(stats.perMonthIDR)) + '</div>' +
+              (stats.dueNote ? '<div class="goal-stat-note">' + stats.dueNote + '</div>' : '') +
+            '</div>' +
+          '</div>' +
+
+          '<div class="goal-motivation ' + (stats.achieved ? 'is-achieved' : '') + '">' + goalMotivationText(pctLabel, stats.achieved) + '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    el.goalsGrid.querySelectorAll('[data-goal-edit]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const goal = goals.find(function(g){ return g.id === btn.dataset.goalEdit; });
+        if(goal) openGoalModal('edit', goal);
+      });
+    });
+    el.goalsGrid.querySelectorAll('[data-goal-delete]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const confirmed = window.confirm('Hapus target ini? Tindakan ini tidak bisa dibatalkan.');
+        if(!confirmed) return;
+        goals = goals.filter(function(g){ return g.id !== btn.dataset.goalDelete; });
+        saveGoals();
+        renderGoalsPage();
+        if(settings.notif) showToast('Target berhasil dihapus');
+      });
+    });
+  }
+
+  function setGoalCurrency(currency){
+    currentGoalCurrency = currency;
+    el.goalCurrencyToggle.querySelectorAll('button').forEach(function(btn){
+      btn.classList.toggle('is-active', btn.dataset.goalCurrency === currency);
+    });
+    el.inputGoalAmountPrefix.textContent = currency === 'LKR' ? 'Rs' : 'Rp';
+  }
+
+  el.goalCurrencyToggle.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click', function(){ setGoalCurrency(btn.dataset.goalCurrency); });
+  });
+
+  el.inputGoalAmount.addEventListener('input', function(){
+    const caretFromEnd = this.value.length - this.selectionStart;
+    this.value = formatAmountInput(this.value);
+    const pos = this.value.length - caretFromEnd;
+    this.setSelectionRange(pos, pos);
+  });
+
+  function clearGoalErrors(){
+    [el.inputGoalName, el.inputGoalAmount, el.inputGoalMonth].forEach(function(node){ node.classList.remove('has-error'); });
+    [el.errorGoalName, el.errorGoalAmount, el.errorGoalMonth].forEach(function(node){ node.classList.remove('is-visible'); });
+  }
+
+  function openGoalModal(mode, goal){
+    clearGoalErrors();
+    if(mode === 'edit' && goal){
+      editingGoalId = goal.id;
+      el.goalModalTitle.textContent = 'Edit Target';
+      el.btnSubmitGoal.querySelector('span').textContent = 'Simpan Perubahan';
+      setGoalCurrency(goal.targetCurrency);
+      el.inputGoalName.value = goal.name;
+      el.inputGoalAmount.value = formatAmountInput(String(goal.targetAmount));
+      el.inputGoalMonth.value = goal.targetMonth;
+    } else {
+      editingGoalId = null;
+      el.goalModalTitle.textContent = 'Tambah Target Baru';
+      el.btnSubmitGoal.querySelector('span').textContent = 'Simpan Target';
+      setGoalCurrency('IDR');
+      el.inputGoalName.value = '';
+      el.inputGoalAmount.value = '';
+      el.inputGoalMonth.value = '';
+    }
+    el.goalModalOverlay.classList.add('is-open');
+    setTimeout(function(){ el.inputGoalName.focus(); }, 50);
+  }
+
+  function closeGoalModal(){ el.goalModalOverlay.classList.remove('is-open'); }
+
+  el.btnOpenAddGoal.addEventListener('click', function(){ openGoalModal('add'); });
+  el.btnCloseGoalModal.addEventListener('click', closeGoalModal);
+  el.btnCancelGoalModal.addEventListener('click', closeGoalModal);
+  el.goalModalOverlay.addEventListener('click', function(e){ if(e.target === el.goalModalOverlay) closeGoalModal(); });
+
+  el.goalForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    clearGoalErrors();
+
+    let valid = true;
+    const name = el.inputGoalName.value.trim();
+    const amount = parseAmountInput(el.inputGoalAmount.value);
+    const monthVal = el.inputGoalMonth.value;
+
+    if(!name){ el.inputGoalName.classList.add('has-error'); el.errorGoalName.classList.add('is-visible'); valid = false; }
+    if(amount <= 0){ el.inputGoalAmount.classList.add('has-error'); el.errorGoalAmount.classList.add('is-visible'); valid = false; }
+    if(!monthVal){ el.inputGoalMonth.classList.add('has-error'); el.errorGoalMonth.classList.add('is-visible'); valid = false; }
+    if(!valid) return;
+
+    const payload = {
+      id: editingGoalId || uid(),
+      name: name,
+      targetAmount: amount,
+      targetCurrency: currentGoalCurrency,
+      targetMonth: monthVal
+    };
+
+    if(editingGoalId){
+      const idx = goals.findIndex(function(g){ return g.id === editingGoalId; });
+      if(idx > -1) goals[idx] = payload;
+      if(settings.notif) showToast('Target berhasil diperbarui');
+    } else {
+      goals.unshift(payload);
+      if(settings.notif) showToast('Target baru berhasil dibuat');
+    }
+
+    saveGoals();
+    renderGoalsPage();
+    closeGoalModal();
+  });
+
+  /* ---------- Panduan Pengguna: accordion toggle (independen dari accordion investasi) ---------- */
+  document.querySelectorAll('[data-guide-toggle]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const key = btn.dataset.guideToggle;
+      const accEl = document.getElementById('guide-' + key);
+      const bodyEl = document.getElementById('guide-body-' + key);
+      const isOpen = accEl.classList.contains('is-open');
+      if(isOpen){
+        bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+        requestAnimationFrame(function(){ bodyEl.style.maxHeight = '0px'; });
+        accEl.classList.remove('is-open');
+      } else {
+        accEl.classList.add('is-open');
+        bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
+      }
+    });
+  });
+
+  /* ============================================================
+     RENDER: PROFIL & PENGATURAN PAGE
+  ============================================================ */
+  function renderProfilePage(){
+    el.inputProfileName.value = profile.name || '';
+    el.inputProfileEmail.value = profile.email || '';
+    el.profileAvatarInitial.textContent = (profile.name || 'F').trim().charAt(0).toUpperCase();
+    el.toggleHideBalance.checked = !!settings.hideBalance;
+    el.toggleNotif.checked = !!settings.notif;
+  }
+
+  el.btnSaveProfile.addEventListener('click', function(){
+    profile.name = el.inputProfileName.value.trim();
+    profile.email = el.inputProfileEmail.value.trim();
+    saveProfile();
+    renderProfilePage();
+    showToast('Profil berhasil disimpan');
+  });
+
+  el.toggleHideBalance.addEventListener('change', function(){
+    settings.hideBalance = this.checked;
+    saveSettings();
+    renderStats(computeTotals());
+  });
+
+  el.toggleNotif.addEventListener('change', function(){
+    settings.notif = this.checked;
+    saveSettings();
+  });
+
+  el.btnResetData.addEventListener('click', function(){
+    const confirmed = window.confirm('Yakin ingin menghapus seluruh data transaksi, anggaran, dan investasi? Tindakan ini tidak bisa dibatalkan.');
+    if(!confirmed) return;
+    transactions = [];
+    budgets = {};
+    investments = [];
+    saveTransactions();
+    saveBudgets();
+    saveInvestments();
+    showToast('Semua data berhasil dihapus');
+    renderCurrentPage();
+  });
+
+  /* ============================================================
+     MASTER RENDER (dipanggil setiap kali data berubah)
+  ============================================================ */
+  function renderCurrentPage(){
+    if(currentPage === 'dashboard') renderDashboard();
+    else if(currentPage === 'rekening') renderRekeningPage();
+    else if(currentPage === 'laporan') renderReportPage();
+    else if(currentPage === 'anggaran') renderBudgetPage();
+    else if(currentPage === 'investasi') renderInvestmentPage();
+    else if(currentPage === 'target') renderGoalsPage();
+    else if(currentPage === 'profil') renderProfilePage();
+    // Dashboard tetap disegarkan di background agar stat & widget akun selalu real-time saat kembali
+    if(currentPage !== 'dashboard') renderDashboard();
+  }
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  populateCategorySelect('income');
+  populateAccountSelectForCurrency('IDR');
+  populateInvestSuggestions('pasar-modal');
+  populateExchangeAccountSelects();
+  setCurrencyUIState();
+  navigateTo('dashboard');
+
+})();
+</script>
+
+</body>
+</html>
