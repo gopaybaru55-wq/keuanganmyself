@@ -1,6 +1,6 @@
 {
-  "name": "dimerla - Personal Finance Tracker",
-  "short_name": "dimerla",
+  "name": "Markus Chan - Personal Finance Tracker",
+  "short_name": "Markus Chan",
   "description": "Aplikasi manajemen keuangan pribadi untuk ekspatriat, dengan pemisahan kantong saldo IDR & LKR.",
   "start_url": "./index.html",
   "scope": "./",
