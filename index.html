@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MY SELF — Personal Finance Tracker</title>
+<title>Markus Chan — Personal Finance Tracker</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,13 +20,13 @@
 <!-- Dukungan "Add to Home Screen" khusus iOS Safari -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MARKUS CHAN">
+<meta name="apple-mobile-web-app-title" content="Markus Chan">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
 <style>
   /* ============================================================
-      DESIGN TOKENS  (tidak diubah dari versi asli)
+     DESIGN TOKENS  (tidak diubah dari versi asli)
   ============================================================ */
   :root{
     --bg:            #FBFBF9;
@@ -733,6 +733,111 @@
   .guide-content p:last-child{ margin-bottom: 0; }
   .guide-content ul, .guide-content ol{ margin: 0 0 10px 20px; display: flex; flex-direction: column; gap: 6px; }
   .guide-content strong{ color: var(--text-primary); font-weight: 700; }
+/* ============================================================
+     BANNER INSTALL PWA — Dashboard (muncul saat pertama buka)
+  ============================================================ */
+  .dashboard-install-banner{
+    display: none; /* Tersembunyi default, muncul via JS */
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 20px rgba(14, 143, 110, 0.28);
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    text-align: left;
+    transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  }
+  .dashboard-install-banner:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(14, 143, 110, 0.36);
+  }
+  .dashboard-install-banner:active{ transform: translateY(0); }
+  .dashboard-install-banner img{
+    width: 44px; height: 44px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    padding: 6px;
+  }
+  .dashboard-install-banner-text{ flex: 1; }
+  .dashboard-install-banner-text strong{
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 3px;
+  }
+  .dashboard-install-banner-text span{
+    font-size: 12px;
+    color: rgba(255,255,255,0.78);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .dashboard-install-banner-arrow{
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: #ffffff;
+  }
+  .dashboard-install-banner-arrow svg{
+    width: 16px; height: 16px;
+  }
+  @media (max-width: 600px){
+    .dashboard-install-banner{ padding: 13px 14px; gap: 10px; }
+    .dashboard-install-banner img{ width: 38px; height: 38px; }
+    .dashboard-install-banner-text strong{ font-size: 13px; }
+    .dashboard-install-banner-text span{ font-size: 11px; }
+  }
+
+  /* Tombol Install PWA di halaman Panduan */
+  .btn-install-pwa-guide{
+    display: none; /* Tersembunyi default, muncul hanya jika PWA bisa diinstal */
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 14px rgba(14, 143, 110, 0.30);
+    transition: transform 0.15s var(--ease), box-shadow 0.15s var(--ease);
+  }
+  .btn-install-pwa-guide:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(14, 143, 110, 0.38);
+  }
+  .btn-install-pwa-guide:active{ transform: translateY(0); }
+  .btn-install-pwa-guide img{
+    width: 22px; height: 22px; object-fit: contain; flex-shrink: 0;
+  }
+  .btn-install-pwa-guide .install-label{ flex: 1; text-align: left; line-height: 1.3; }
+  .btn-install-pwa-guide .install-label span{
+    display: block; font-size: 10.5px; font-weight: 500; opacity: 0.82; margin-top: 1px;
+  }
+  .btn-install-pwa-guide-ios{
+    display: none; /* Muncul hanya di iOS Safari */
+    padding: 12px 16px;
+    background: var(--emerald-light);
+    border: 1px solid var(--emerald);
+    border-radius: var(--radius-md);
+    font-size: 12.5px;
+    color: var(--emerald-dark);
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
 
   /* ============================================================
      PROFIL & PENGATURAN
@@ -928,7 +1033,7 @@
         </svg>
       </div>
       <div>
-        <div class="brand-text">KEUANGAN MY SELF</div>
+        <div class="brand-text">Markus Chan</div>
         <div class="brand-sub">Finance tracker</div>
       </div>
     </div>
@@ -1011,6 +1116,20 @@
          PAGE 1 — DASHBOARD
     ================================================================= -->
     <section class="page is-active" id="page-dashboard">
+
+      <!-- Banner Install PWA — hanya muncul jika belum diinstal & browser support -->
+      <button class="dashboard-install-banner" id="btnInstallPWADashboard">
+        <img src="icons/instal.png" alt="Install Markus Chan" onerror="this.style.display='none'">
+        <div class="dashboard-install-banner-text">
+          <strong> Instal Aplikasi Markus Chan</strong>
+          <span>Tambahkan ke layar utama HP kamu — gratis, tanpa Play Store</span>
+        </div>
+        <div class="dashboard-install-banner-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </button>
 
       <section class="stats-grid">
         <div class="stat-card stat-card--balance">
@@ -1408,9 +1527,9 @@
     <section class="page" id="page-panduan">
 
       <section class="panel" style="margin-bottom:16px;">
-        <div class="panel-title">Panduan Pengguna dimerla</div>
+        <div class="panel-title">Panduan Pengguna Markus Chan</div>
         <div class="panel-title-sub" style="margin-top:6px; max-width:640px;">
-          Ringkasan cara kerja fitur-fitur utama dimerla. Klik tiap topik untuk membuka penjelasan lengkapnya.
+          Ringkasan cara kerja fitur-fitur utama Markus Chan. Klik tiap topik untuk membuka penjelasan lengkapnya.
         </div>
       </section>
 
@@ -1428,7 +1547,7 @@
           </button>
           <div class="accordion-body" id="guide-body-dua-kantong">
             <div class="guide-content">
-              <p>dimerla memisahkan uangmu menjadi dua kantong yang benar-benar terpisah secara riil, bukan sekadar tampilan:</p>
+              <p>Markus Chan memisahkan uangmu menjadi dua kantong yang benar-benar terpisah secara riil, bukan sekadar tampilan:</p>
               <ul>
                 <li><strong>Kantong Indonesia (IDR)</strong> — mencakup BCA, BNI, BRI, Mandiri, Seabank, Bank Jago, Neo Bank, Permata Bank, DANA, OVO, GoPay, LinkAja, Sakuku, serta bank/e-wallet kustom yang kamu tambahkan sendiri.</li>
                 <li><strong>Kantong Sri Lanka (LKR)</strong> — khusus Sampath Bank dan Cash LKR (uang tunai fisik).</li>
@@ -1474,7 +1593,7 @@
                 <li>Pilih <strong>Akun Asal</strong> (tempat uang diambil) dan <strong>Akun Tujuan</strong> (tempat uang diterima).</li>
                 <li>Masukkan jumlah nominal yang dilepas dari akun asal.</li>
                 <li>Ketik <strong>nilai kurs hari itu</strong> secara manual (misal 52.5, 53, atau 55) — angka ini tidak terkunci di 54, jadi selalu presisi sesuai kurs agen yang sebenarnya.</li>
-                <li>dimerla otomatis menghitung jumlah yang diterima di akun tujuan, lalu memotong saldo akun asal dan menambah saldo akun tujuan secara sinkron begitu transaksi disimpan.</li>
+                <li>Markus Chan otomatis menghitung jumlah yang diterima di akun tujuan, lalu memotong saldo akun asal dan menambah saldo akun tujuan secara sinkron begitu transaksi disimpan.</li>
               </ol>
             </div>
           </div>
@@ -1511,10 +1630,59 @@
           <div class="accordion-body" id="guide-body-target-impian">
             <div class="guide-content">
               <p>Buat target bebas seperti "Biaya Nikah" atau "Modal Bisnis Kampung" dengan nominal target (IDR atau LKR, bebas pilih) dan bulan-tahun target menggunakan month picker.</p>
-              <p>Progres <strong>tidak diisi manual</strong> — dimerla membaca otomatis total gabungan saldo riil Kantong Indonesia + Kantong Sri Lanka (dikonversi ke kurs acuan) lalu membandingkannya dengan nominal targetmu.</p>
+              <p>Progres <strong>tidak diisi manual</strong> — Markus Chan membaca otomatis total gabungan saldo riil Kantong Indonesia + Kantong Sri Lanka (dikonversi ke kurs acuan) lalu membandingkannya dengan nominal targetmu.</p>
               <p>Kalkulator simulasi di tiap kartu menghitung <strong>berapa yang wajib kamu sisihkan tiap bulan</strong> memakai rumus:</p>
               <p style="font-family:var(--font-mono); font-size:12.5px; background:var(--surface-sunken); padding:10px 14px; border-radius:var(--radius-sm);">Wajib Menabung/Bulan = (Nominal Target − Saldo Terkumpul) &divide; Sisa Bulan</p>
               <p>Kalau saldo gabunganmu sudah melebihi nominal target, kartu akan menampilkan status <strong>Target Tercapai</strong> beserta ucapan selamat.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" data-guide="instal-app" id="guide-instal-app">
+          <button type="button" class="accordion-header" data-guide-toggle="instal-app">
+            <div class="accordion-header-left">
+              <span class="guide-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/><path d="M9 6h6"/></svg>
+              </span>
+              <span class="accordion-title">6. Cara Instal Aplikasi Markus Chan di Android &amp; iPhone</span>
+            </div>
+            <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="accordion-body" id="guide-body-instal-app">
+            <div class="guide-content">
+              <p>Markus Chan bisa dipasang langsung ke layar utama HP kamu seperti aplikasi biasa, tanpa lewat Play Store atau App Store.</p>
+
+              <!-- Tombol Install: muncul otomatis di Android Chrome jika PWA belum terinstal -->
+              <button class="btn-install-pwa-guide" id="btnInstallPWAGuide">
+                <img src="icons/instal.png" alt="Install Markus Chan" onerror="this.style.display='none'">
+                <div class="install-label">
+                  Instal Aplikasi Markus Chan Sekarang
+                  <span>Ketuk untuk menambahkan ke layar utama HP kamu</span>
+                </div>
+              </button>
+
+              <!-- Petunjuk manual khusus iOS Safari (tidak support beforeinstallprompt) -->
+              <div class="btn-install-pwa-guide-ios" id="iosInstallHint">
+                 <strong>Pengguna iPhone:</strong> Buka Markus Chan di <strong>Safari</strong>, ketuk ikon <strong>Share</strong> (kotak + panah atas), lalu pilih <strong>"Tambahkan ke Layar Utama"</strong>.
+              </div>
+
+              <p><strong>Untuk pengguna Android (Google Chrome):</strong></p>
+              <ol>
+                <li>Buka Markus Chan melalui aplikasi <strong>Google Chrome</strong>.</li>
+                <li>Ketuk ikon titik tiga (&#8942;) di pojok kanan atas browser.</li>
+                <li>Pilih <strong>"Instal aplikasi"</strong> atau <strong>"Tambahkan ke Layar Utama"</strong>.</li>
+                <li>Ketuk <strong>"Instal"</strong> untuk konfirmasi &mdash; ikon Markus Chan akan muncul di layar utama seperti aplikasi native.</li>
+              </ol>
+
+              <p><strong>Untuk pengguna iPhone (wajib pakai Safari):</strong></p>
+              <ol>
+                <li>Buka Markus Chan melalui aplikasi <strong>Safari</strong> &mdash; fitur ini tidak tersedia di Chrome versi iOS.</li>
+                <li>Ketuk tombol <strong>Share</strong> (ikon kotak dengan panah ke atas) di bagian bawah layar.</li>
+                <li>Gulir ke bawah, lalu pilih <strong>"Tambahkan ke Layar Utama"</strong> (Add to Home Screen).</li>
+                <li>Ketuk <strong>"Tambah"</strong> di pojok kanan atas untuk menyelesaikan.</li>
+              </ol>
+
+              <p>Setelah terpasang, Markus Chan akan terbuka tanpa address bar browser dan tetap bisa dibuka meski koneksi internet sedang lemah, berkat teknologi PWA.</p>
             </div>
           </div>
         </div>
@@ -1767,6 +1935,13 @@
           <div class="field-error" id="errorGoalAmount">Nominal target harus lebih dari 0</div>
         </div>
 
+        <div class="field">
+          <label class="field-label" for="target-alokasi">Alokasi Saldo (%)</label>
+          <input type="number" id="target-alokasi" class="field-input" min="1" max="100" required placeholder="Contoh: 60">
+          <div class="field-error" id="errorGoalAlokasi">Alokasi wajib diisi, antara 1–100%</div>
+          <div class="field-hint">Persentase dari Total Saldo Gabungan (Kantong IDR + LKR) yang dialokasikan khusus untuk target ini.</div>
+        </div>
+
         <div class="field" style="margin-bottom:0">
           <label class="field-label" for="inputGoalMonth">Target Waktu (Bulan &amp; Tahun)</label>
           <input type="month" id="inputGoalMonth" class="field-input">
@@ -1794,13 +1969,13 @@
   /* ============================================================
      CONSTANTS & ICONS
   ============================================================ */
-  const STORAGE_KEY = 'dimerla_transactions';
-  const BUDGET_KEY = 'dimerla_budgets';
-  const PROFILE_KEY = 'dimerla_profile';
-  const SETTINGS_KEY = 'dimerla_settings';
-  const INVESTMENTS_KEY = 'dimerla_investments';
-  const CURRENCY_KEY = 'dimerla_currency';
-  const GOALS_KEY = 'dimerla_goals';
+  const STORAGE_KEY = 'Markus Chan_transactions';
+  const BUDGET_KEY = 'Markus Chan_budgets';
+  const PROFILE_KEY = 'Markus Chan_profile';
+  const SETTINGS_KEY = 'Markus Chan_settings';
+  const INVESTMENTS_KEY = 'Markus Chan_investments';
+  const CURRENCY_KEY = 'Markus Chan_currency';
+  const GOALS_KEY = 'Markus Chan_goals';
 
   const LKR_RATE = 54; // 1 LKR = 54 IDR (kurs acuan tetap, hanya untuk visualisasi/gabungan)
 
@@ -1869,7 +2044,7 @@
     investasi:  { title: 'Manajemen Investasi', subtitle: 'Catat dan pantau instrumen investasi kamu' },
     target:     { title: 'Target & Impian', subtitle: 'Wujudkan rencana keuanganmu dengan simulasi otomatis' },
     edukasi:    { title: 'Edukasi Finansial', subtitle: 'Wawasan singkat untuk keputusan finansial yang lebih baik' },
-    panduan:    { title: 'Panduan Pengguna', subtitle: 'Pelajari cara memaksimalkan fitur-fitur dimerla' },
+    panduan:    { title: 'Panduan Pengguna', subtitle: 'Pelajari cara memaksimalkan fitur-fitur Markus Chan' },
     profil:     { title: 'Profil & Pengaturan', subtitle: 'Kelola akun dan preferensi aplikasi' }
   };
 
@@ -2059,9 +2234,11 @@
     inputGoalAmount: document.getElementById('inputGoalAmount'),
     inputGoalAmountPrefix: document.getElementById('inputGoalAmountPrefix'),
     inputGoalMonth: document.getElementById('inputGoalMonth'),
+    inputGoalAlokasi: document.getElementById('target-alokasi'),
     errorGoalName: document.getElementById('errorGoalName'),
     errorGoalAmount: document.getElementById('errorGoalAmount'),
     errorGoalMonth: document.getElementById('errorGoalMonth'),
+    errorGoalAlokasi: document.getElementById('errorGoalAlokasi'),
     btnSubmitGoal: document.getElementById('btnSubmitGoal'),
 
     inputProfileName: document.getElementById('inputProfileName'),
@@ -3160,7 +3337,11 @@
   }
 
   function computeGoalStats(goal){
-    const combinedIDR = computeNetWorthIDR();
+    const totalCombinedIDR = computeNetWorthIDR();
+    const allocationPct = goal.allocationPct || 100; // fallback: target lama tanpa alokasi tetap 100%
+    // Opsi B: setiap target hanya "mengklaim" sekian persen dari total saldo gabungan,
+    // bukan langsung membaca 100% saldo ke semua kartu.
+    const combinedIDR = totalCombinedIDR * (allocationPct / 100);
     const targetIDR = toIDREquivalent(goal.targetAmount, goal.targetCurrency);
     const shortfallIDR = Math.max(0, targetIDR - combinedIDR);
     const achieved = targetIDR > 0 && combinedIDR >= targetIDR;
@@ -3218,7 +3399,7 @@
           '<div class="goal-card-top">' +
             '<div>' +
               '<div class="goal-card-name">' + escapeHtml(goal.name) + '</div>' +
-              '<div class="goal-card-due">Target: ' + formatGoalMonthLabel(goal.targetMonth) + '</div>' +
+              '<div class="goal-card-due">Target: ' + formatGoalMonthLabel(goal.targetMonth) + ' &middot; Alokasi ' + (goal.allocationPct || 100) + '% dari total saldo</div>' +
             '</div>' +
             '<div class="goal-card-actions">' +
               '<button type="button" class="icon-btn" data-goal-edit="' + goal.id + '" aria-label="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>' +
@@ -3289,8 +3470,8 @@
   });
 
   function clearGoalErrors(){
-    [el.inputGoalName, el.inputGoalAmount, el.inputGoalMonth].forEach(function(node){ node.classList.remove('has-error'); });
-    [el.errorGoalName, el.errorGoalAmount, el.errorGoalMonth].forEach(function(node){ node.classList.remove('is-visible'); });
+    [el.inputGoalName, el.inputGoalAmount, el.inputGoalMonth, el.inputGoalAlokasi].forEach(function(node){ node.classList.remove('has-error'); });
+    [el.errorGoalName, el.errorGoalAmount, el.errorGoalMonth, el.errorGoalAlokasi].forEach(function(node){ node.classList.remove('is-visible'); });
   }
 
   function openGoalModal(mode, goal){
@@ -3303,6 +3484,7 @@
       el.inputGoalName.value = goal.name;
       el.inputGoalAmount.value = formatAmountInput(String(goal.targetAmount));
       el.inputGoalMonth.value = goal.targetMonth;
+      el.inputGoalAlokasi.value = goal.allocationPct || 100;
     } else {
       editingGoalId = null;
       el.goalModalTitle.textContent = 'Tambah Target Baru';
@@ -3311,6 +3493,7 @@
       el.inputGoalName.value = '';
       el.inputGoalAmount.value = '';
       el.inputGoalMonth.value = '';
+      el.inputGoalAlokasi.value = '';
     }
     el.goalModalOverlay.classList.add('is-open');
     setTimeout(function(){ el.inputGoalName.focus(); }, 50);
@@ -3331,10 +3514,12 @@
     const name = el.inputGoalName.value.trim();
     const amount = parseAmountInput(el.inputGoalAmount.value);
     const monthVal = el.inputGoalMonth.value;
+    const allocationPct = parseInt(el.inputGoalAlokasi.value, 10) || 0;
 
     if(!name){ el.inputGoalName.classList.add('has-error'); el.errorGoalName.classList.add('is-visible'); valid = false; }
     if(amount <= 0){ el.inputGoalAmount.classList.add('has-error'); el.errorGoalAmount.classList.add('is-visible'); valid = false; }
     if(!monthVal){ el.inputGoalMonth.classList.add('has-error'); el.errorGoalMonth.classList.add('is-visible'); valid = false; }
+    if(allocationPct < 1 || allocationPct > 100){ el.inputGoalAlokasi.classList.add('has-error'); el.errorGoalAlokasi.classList.add('is-visible'); valid = false; }
     if(!valid) return;
 
     const payload = {
@@ -3342,7 +3527,8 @@
       name: name,
       targetAmount: amount,
       targetCurrency: currentGoalCurrency,
-      targetMonth: monthVal
+      targetMonth: monthVal,
+      allocationPct: allocationPct
     };
 
     if(editingGoalId){
@@ -3368,7 +3554,9 @@
       const isOpen = accEl.classList.contains('is-open');
       if(isOpen){
         bodyEl.style.maxHeight = bodyEl.scrollHeight + 'px';
-        requestAnimationFrame(function(){ bodyEl.style.maxHeight = '0px'; });
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){ bodyEl.style.maxHeight = '0px'; });
+        });
         accEl.classList.remove('is-open');
       } else {
         accEl.classList.add('is-open');
@@ -3408,14 +3596,16 @@
   });
 
   el.btnResetData.addEventListener('click', function(){
-    const confirmed = window.confirm('Yakin ingin menghapus seluruh data transaksi, anggaran, dan investasi? Tindakan ini tidak bisa dibatalkan.');
+    const confirmed = window.confirm('Yakin ingin menghapus seluruh data transaksi, anggaran, investasi, dan target? Tindakan ini tidak bisa dibatalkan.');
     if(!confirmed) return;
     transactions = [];
     budgets = {};
     investments = [];
+    goals = [];
     saveTransactions();
     saveBudgets();
     saveInvestments();
+    saveGoals();
     showToast('Semua data berhasil dihapus');
     renderCurrentPage();
   });
@@ -3445,7 +3635,7 @@
   setCurrencyUIState();
   navigateTo('dashboard');
 
- /* ============================================================
+  /* ============================================================
      PWA INSTALL HANDLER — Tombol di Halaman Panduan
   ============================================================ */
   var pwaInstallPrompt = null;
@@ -3523,10 +3713,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
     navigator.serviceWorker.register('./service-worker.js')
       .then(function (reg) {
-        console.log('dimerla: Service Worker terdaftar, scope:', reg.scope);
+        console.log('Markus Chan: Service Worker terdaftar, scope:', reg.scope);
       })
       .catch(function (err) {
-        console.warn('dimerla: Registrasi Service Worker gagal:', err);
+        console.warn('Markus Chan: Registrasi Service Worker gagal:', err);
       });
   });
 }
